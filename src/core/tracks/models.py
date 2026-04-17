@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass(slots=True)
 class Track:
     id: str
@@ -11,6 +12,7 @@ class Track:
     additional_info: str
     license: str
     audio_url: str
+
 
 @dataclass(slots=True)
 class TrackEmbedding:

@@ -11,12 +11,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class BaseModel(AsyncAttrs, DeclarativeBase):
     pass
 
-options = {
-    "echo": False
-}
+
+options = {"echo": False}
 
 engine = create_async_engine(app_config.db.dsn_url, pool_pre_ping=True, **options)
-async_session_maker = async_sessionmaker(engine, expire_on_commit=False, autoflush=False, autocommit=False, class_=AsyncSession)
+async_session_maker = async_sessionmaker(
+    engine,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+    class_=AsyncSession,
+)
 
 
 async def create_db_and_tables():
