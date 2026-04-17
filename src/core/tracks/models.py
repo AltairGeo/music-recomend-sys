@@ -10,6 +10,7 @@ class Track:
     album: str
     additional_info: str
     license: str
+    audio_url: str
 
 @dataclass(slots=True)
 class TrackEmbedding:
