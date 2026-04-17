@@ -10,6 +10,7 @@ class DataBaseConfig:
 class MainConfig:
     def __init__(self, db_config: DataBaseConfig = DataBaseConfig()) -> None:
         self.db = db_config
+        self.per_page: int = 25
 
 
 app_config = MainConfig()
