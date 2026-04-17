@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.driven.database.session import BaseModel
 
-log = getLogger(__name__)
+_log = getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -34,7 +34,7 @@ class BaseDAO(Generic[T]):
             await self.session.refresh(obj)
             return obj
         except Exception as e:
-            log.error(e)
+            _log.error(e)
             raise e
 
     async def read(
@@ -74,7 +74,7 @@ class BaseDAO(Generic[T]):
             )
             return result
         except Exception as e:
-            log.error(e)
+            _log.error(e)
             raise e
 
     async def get(self, id: int) -> Optional[T]:
@@ -93,7 +93,7 @@ class BaseDAO(Generic[T]):
             result = await self.session.get(self.model, ident=id)
             return result
         except Exception as e:
-            log.error(e)
+            _log.error(e)
             raise e
 
     async def update(self, update_data: dict, **filters) -> bool:
@@ -117,7 +117,7 @@ class BaseDAO(Generic[T]):
             await self.session.commit()
             return True
         except Exception as e:
-            log.error(e)
+            _log.error(e)
             return False
 
     async def delete(self, **kwargs):
@@ -138,5 +138,5 @@ class BaseDAO(Generic[T]):
             await self.session.commit()
             return True
         except Exception as e:
-            log.error(e)
+            _log.error(e)
             raise e
