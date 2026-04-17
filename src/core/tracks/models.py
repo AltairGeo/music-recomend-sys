@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(slots=True)
 class Track:
-    id: str
+    id: int
     title: str
     artist: str
     genre: str
@@ -16,5 +16,5 @@ class Track:
 
 @dataclass(slots=True)
 class TrackEmbedding:
-    track_id: str
+    track_id: int
     vector: list[float]
