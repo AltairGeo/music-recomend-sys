@@ -8,5 +8,8 @@ class DataBaseConfig:
         self.dsn_url: str = os.getenv("DATABASE_DSN", "sqlite+aiosqlite:///blog.db")
 
 class MainConfig:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, db_config: DataBaseConfig = DataBaseConfig()) -> None:
+        self.db = db_config
+
+
+app_config = MainConfig()
