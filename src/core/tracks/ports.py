@@ -1,5 +1,5 @@
 from typing import Protocol
-from .models import Track
+from .domains import Track
 
 
 class TracksCrudPort(Protocol):

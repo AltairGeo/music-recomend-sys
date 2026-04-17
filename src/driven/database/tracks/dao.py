@@ -1,4 +1,4 @@
-from src.core.tracks.models import Track
+from src.core.tracks.domains import Track
 
 
 class TracksCrudDao:

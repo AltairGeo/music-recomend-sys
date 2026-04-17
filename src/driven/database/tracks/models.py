@@ -1,7 +1,7 @@
 from src.driven.database.session import BaseModel
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ARRAY, FLOAT, ForeignKey, String
-from src.core.tracks.models import Track
+from src.core.tracks.domains import Track
 
 
 class TrackModel(BaseModel):
