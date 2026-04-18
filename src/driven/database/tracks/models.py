@@ -1,7 +1,7 @@
 from src.driven.database.session import BaseModel
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ARRAY, FLOAT, ForeignKey, String
-from src.core.tracks.domains import Track
+from src.core.tracks.domains import Track, TrackEmbedding
 
 
 class TrackModel(BaseModel):
@@ -15,7 +15,7 @@ class TrackModel(BaseModel):
     album: Mapped[str] = mapped_column(String(150), nullable=False)
     additional_info: Mapped[str]
     license: Mapped[str]
-    embedding_id: Mapped[int] = mapped_column(ForeignKey("tracks_embeddings.id"), nullable=True)
+    embedding_id: Mapped[int] = mapped_column(ForeignKey("tracks_embeddings.id"), nullable=False)
     embedding: Mapped["TrackEmbeddingModel"] = relationship(lazy="joined")
 
     @property
@@ -32,7 +32,8 @@ class TrackModel(BaseModel):
             id=self.id,
             license=self.license,
             title=self.title,
-            year=self.year
+            year=self.year,
+            embedding=TrackEmbedding(track_id=self.id, vector=self.embedding.vector)
         )
 
 class TrackEmbeddingModel(BaseModel):

@@ -12,7 +12,7 @@ class Track:
     additional_info: str
     license: str
     audio_url: str
-
+    embedding: "TrackEmbedding"
 
 @dataclass(slots=True)
 class TrackEmbedding:
