@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+from pathlib import Path
 
 @dataclass(slots=True)
 class Track:
@@ -13,6 +13,7 @@ class Track:
     license: str
     audio_url: str
     embedding: "TrackEmbedding"
+    path_to_file: Path
 
 @dataclass(slots=True)
 class TrackEmbedding:

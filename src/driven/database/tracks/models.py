@@ -2,6 +2,7 @@ from src.driven.database.session import BaseModel
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ARRAY, FLOAT, ForeignKey, String
 from src.core.tracks.domains import Track, TrackEmbedding
+from pathlib import Path
 
 
 class TrackModel(BaseModel):
@@ -17,6 +18,8 @@ class TrackModel(BaseModel):
     license: Mapped[str]
     embedding_id: Mapped[int] = mapped_column(ForeignKey("tracks_embeddings.id"), nullable=False)
     embedding: Mapped["TrackEmbeddingModel"] = relationship(lazy="joined")
+    path_to_file: Mapped[str] = mapped_column(String(512), nullable=False)
+
 
     @property
     def audio_url(self) -> str:
@@ -33,7 +36,8 @@ class TrackModel(BaseModel):
             license=self.license,
             title=self.title,
             year=self.year,
-            embedding=TrackEmbedding(track_id=self.id, vector=self.embedding.vector)
+            embedding=TrackEmbedding(track_id=self.id, vector=self.embedding.vector),
+            path_to_file=Path(self.path_to_file)
         )
 
 class TrackEmbeddingModel(BaseModel):

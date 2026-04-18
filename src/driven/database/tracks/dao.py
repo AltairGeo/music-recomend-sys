@@ -40,4 +40,5 @@ class TracksCrudDao:
         async with async_session_maker() as session:
             stmt = select(TrackModel).filter(TrackModel.title.match(name))
             res = (await session.execute(stmt)).scalars().all()
+
             return [i.dump_to_domain() for i in res]
