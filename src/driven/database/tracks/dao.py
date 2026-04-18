@@ -1,10 +1,14 @@
 from typing import Sequence
-from src.driven.database.tracks.models import TrackModel
+from src.driven.database.tracks.models import TrackModel, TrackEmbeddingModel
 from src.core.tracks.domains import Track
 from src.driven.database.session import async_session_maker
 from src.utils.conv.from_domain_to_model import trackDomTOtrackMod
-from sqlalchemy import func, select
+from sqlalchemy import func, select, delete
 from src.generics.read_result import ReadDTO
+import logging
+
+_log = logging.getLogger(__name__)
+
 
 class TracksCrudDao:
     async def create(self, model: Track, embedding_id: int) -> int:
@@ -42,3 +46,32 @@ class TracksCrudDao:
             res = (await session.execute(stmt)).scalars().all()
 
             return [i.dump_to_domain() for i in res]
+
+
+
+class EmbeddingsCrudDAO:
+    async def create(self, vector: list[float]) -> int|None:
+        try:
+            async with async_session_maker() as session:
+                obj = TrackEmbeddingModel(
+                    vector=vector
+                )
+                session.add(
+                    obj
+                )
+                await session.commit()
+                return obj.id
+        except Exception as e:
+            _log.error("EmbeddingCrudDAO error in create method: %s", e)
+            return
+
+    async def delete(self, id: int) -> bool:
+        try:
+            async with async_session_maker() as session:
+                stmt = delete(TrackEmbeddingModel).where(TrackEmbeddingModel.id == id)
+                await session.execute(stmt)
+                await session.commit()
+                return True
+        except Exception as e:
+            _log.error("EmbeddingCrudDAO error in delete method. ID to delete = %s. Error: %s", id, e)
+            return False
