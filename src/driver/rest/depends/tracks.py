@@ -9,3 +9,12 @@ def get_tracks_service(request: Request) -> TracksCrudService:
         raise RuntimeError("TracksCrudService not initialized")
 
     return service
+
+
+def get_tracks_storage(request: Request) -> TracksStoragePort:
+    storage = getattr(request.app.state, "tracks_storage", None)
+
+    if storage is None:
+        raise RuntimeError("TracksStorage not initialized")
+
+    return storage
