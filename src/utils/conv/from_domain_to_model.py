@@ -1,6 +1,7 @@
 from src.core.tracks.domains import Track
 from src.driven.database.tracks.models import TrackModel
 
+
 def trackDomTOtrackMod(track: Track, embedding_id: int) -> TrackModel:
     return TrackModel(
         title=track.title,
@@ -10,5 +11,5 @@ def trackDomTOtrackMod(track: Track, embedding_id: int) -> TrackModel:
         album=track.album,
         additional_info=track.additional_info,
         license=track.license,
-        embedding_id=embedding_id
+        embedding_id=embedding_id,
     )

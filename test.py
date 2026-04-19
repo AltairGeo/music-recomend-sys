@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from pathlib import Path
 
+
 def main():
     audio_path = Path(sys.argv[1])
 
@@ -23,7 +24,6 @@ def main():
         print(f"   - Mean: {np.mean(embedding):.6f}")
         print(f"   - Std: {np.std(embedding):.6f}")
         print(f"   - Sum: {np.sum(embedding):.6f}")
-
 
         if np.any(np.isnan(embedding)):
             print("❌ Обнаружены NaN значения!")

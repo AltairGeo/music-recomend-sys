@@ -11,7 +11,7 @@ _log = logging.getLogger(__name__)
 
 
 class TracksCrudDao:
-    async def create(self, model: Track, embedding_id: int) -> int|None:
+    async def create(self, model: Track, embedding_id: int) -> int | None:
         try:
             async with async_session_maker() as session:
                 db_track = trackDomTOtrackMod(model, embedding_id)
@@ -23,7 +23,7 @@ class TracksCrudDao:
             _log.error("TracksCrudDao error in create method: %s", e)
             return None
 
-    async def get(self, id: int) -> Track|None:
+    async def get(self, id: int) -> Track | None:
         async with async_session_maker() as session:
             res = await session.get(TrackModel, ident=id)
             if not res:
@@ -31,18 +31,25 @@ class TracksCrudDao:
 
             return res.dump_to_domain()
 
-    async def read(self, skip: int = 0, limit: int = 100, **filters) -> ReadDTO[Track]|None:
+    async def read(
+        self, skip: int = 0, limit: int = 100, **filters
+    ) -> ReadDTO[Track] | None:
         try:
             async with async_session_maker() as session:
                 stmt = select(TrackModel).filter_by(**filters).offset(skip).limit(limit)
 
-                count_stmt = select(func.count()).select_from(TrackModel).filter_by(**filters)
+                count_stmt = (
+                    select(func.count()).select_from(TrackModel).filter_by(**filters)
+                )
 
                 return ReadDTO[Track](
-                    entities=[i.dump_to_domain() for i in (await session.execute(stmt)).scalars().all()],
+                    entities=[
+                        i.dump_to_domain()
+                        for i in (await session.execute(stmt)).scalars().all()
+                    ],
                     count_entities=(await session.execute(count_stmt)).scalar_one(),
                     limit=limit,
-                    offset=skip
+                    offset=skip,
                 )
         except Exception as e:
             _log.error("TracksCrudDao error in read method: %s", e)
@@ -56,17 +63,12 @@ class TracksCrudDao:
             return [i.dump_to_domain() for i in res]
 
 
-
 class EmbeddingsCrudDAO:
-    async def create(self, vector: list[float]) -> int|None:
+    async def create(self, vector: list[float]) -> int | None:
         try:
             async with async_session_maker() as session:
-                obj = TrackEmbeddingModel(
-                    vector=vector
-                )
-                session.add(
-                    obj
-                )
+                obj = TrackEmbeddingModel(vector=vector)
+                session.add(obj)
                 await session.commit()
                 return obj.id
         except Exception as e:
@@ -81,5 +83,9 @@ class EmbeddingsCrudDAO:
                 await session.commit()
                 return True
         except Exception as e:
-            _log.error("EmbeddingCrudDAO error in delete method. ID to delete = %s. Error: %s", id, e)
+            _log.error(
+                "EmbeddingCrudDAO error in delete method. ID to delete = %s. Error: %s",
+                id,
+                e,
+            )
             return False

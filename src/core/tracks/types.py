@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+
 class ReadTrackFilters(TypedDict):
     id: int
     title: str

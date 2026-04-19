@@ -25,8 +25,7 @@ class AudioProcessor:
         return y
 
     def extract_features(self, audio: np.ndarray) -> AudioFeatures:
-        features: AudioFeatures = dict() # type: ignore
-
+        features: AudioFeatures = dict()  # type: ignore
 
         # MFCC
         features["mfcc"] = librosa.feature.mfcc(
@@ -53,7 +52,7 @@ class AudioProcessor:
         features["rmse"] = librosa.feature.rms(y=audio)
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
 
-        features["tempo"], _ = librosa.beat.beat_track(y=audio, sr=self.sample_rate) # type: ignore
+        features["tempo"], _ = librosa.beat.beat_track(y=audio, sr=self.sample_rate)  # type: ignore
 
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
 
@@ -63,7 +62,7 @@ class AudioProcessor:
         vector_parts = []
 
         # MFCC
-        mfcc = features['mfcc']
+        mfcc = features["mfcc"]
 
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
@@ -71,9 +70,8 @@ class AudioProcessor:
 
         vector_parts.extend([mfcc_mean, mfcc_std, mfcc_delta])
 
-
         # Спектральные
-        for key in ('spectral_centroid', 'spectral_bandwidth', 'spectral_contrast'):
+        for key in ("spectral_centroid", "spectral_bandwidth", "spectral_contrast"):
             if key in features:
                 spec_feat = features[key]
                 if spec_feat.ndim == 2:
@@ -84,34 +82,35 @@ class AudioProcessor:
                     vector_parts.append(np.array([np.mean(spec_feat)]))
 
         # Chroma
-        chroma = features['chroma_stft']
+        chroma = features["chroma_stft"]
         chroma_mean = np.mean(chroma, axis=1)
         vector_parts.append(chroma_mean)
 
         # Тональные
-        if 'tonal' in features:
-            tonal = features['tonal']
+        if "tonal" in features:
+            tonal = features["tonal"]
             tonal_mean = np.mean(tonal, axis=1)
             vector_parts.append(tonal_mean)
 
-        energy_keys = ['rmse', 'zero_crossing_rate']
+        energy_keys = ["rmse", "zero_crossing_rate"]
         for key in energy_keys:
             if key in features:
                 energy = features[key]
                 energy_mean = np.mean(energy)
                 vector_parts.append(np.array([energy_mean]))
 
-        if 'tempo' in features:
-            tempo = features['tempo']
+        if "tempo" in features:
+            tempo = features["tempo"]
             vector_parts.append(np.array([tempo]))
 
         final_vector = np.concatenate([part.flatten() for part in vector_parts])
 
         return final_vector
 
-
-    def normalize_vector(self, vector: np.ndarray, method: Literal["minmax", "zscore"] = 'minmax') -> np.ndarray:
-        if method == 'minmax':
+    def normalize_vector(
+        self, vector: np.ndarray, method: Literal["minmax", "zscore"] = "minmax"
+    ) -> np.ndarray:
+        if method == "minmax":
             # Min-max нормализация [0, 1]
             v_min = np.min(vector)
             v_max = np.max(vector)
@@ -119,7 +118,7 @@ class AudioProcessor:
                 return (vector - v_min) / (v_max - v_min)
             else:
                 return np.zeros_like(vector)
-        elif method == 'zscore':
+        elif method == "zscore":
             # Z-score нормализация
             mean = np.mean(vector)
             std = np.std(vector)
@@ -141,6 +140,6 @@ class AudioProcessor:
         raw_vector = self.aggregate_features(features)
 
         # Нормализация
-        normalized_vector = self.normalize_vector(raw_vector, method='minmax')
+        normalized_vector = self.normalize_vector(raw_vector, method="minmax")
 
         return normalized_vector

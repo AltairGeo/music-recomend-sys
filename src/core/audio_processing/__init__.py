@@ -1,5 +1,3 @@
-__all__ = (
-    "AudioProcessor",
-)
+__all__ = ("AudioProcessor",)
 
 from .processor import AudioProcessor

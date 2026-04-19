@@ -3,8 +3,11 @@ from .processor import AudioProcessor
 from src.core.tracks.domains import TrackEmbedding
 from src.core.tracks.ports import EmbeddingsCrudPort
 
+
 class AudioEmbeddingService:
-    def __init__(self, audio_processor: AudioProcessor, emb_dao: EmbeddingsCrudPort) -> None:
+    def __init__(
+        self, audio_processor: AudioProcessor, emb_dao: EmbeddingsCrudPort
+    ) -> None:
         self.emb_dao = emb_dao
         self._audio_proccessor = audio_processor
 

@@ -16,10 +16,11 @@ class TrackModel(BaseModel):
     album: Mapped[str] = mapped_column(String(150), nullable=False)
     additional_info: Mapped[str]
     license: Mapped[str]
-    embedding_id: Mapped[int] = mapped_column(ForeignKey("tracks_embeddings.id"), nullable=False)
+    embedding_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks_embeddings.id"), nullable=False
+    )
     embedding: Mapped["TrackEmbeddingModel"] = relationship(lazy="joined")
     file_id: Mapped[str] = mapped_column(String(256), nullable=False)
-
 
     @property
     def audio_url(self) -> str:
@@ -36,9 +37,12 @@ class TrackModel(BaseModel):
             license=self.license,
             title=self.title,
             year=self.year,
-            embedding=TrackEmbedding(id=self.embedding_id, vector=self.embedding.vector),
-            file_id=self.file_id
+            embedding=TrackEmbedding(
+                id=self.embedding_id, vector=self.embedding.vector
+            ),
+            file_id=self.file_id,
         )
+
 
 class TrackEmbeddingModel(BaseModel):
     __tablename__ = "tracks_embeddings"

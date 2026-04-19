@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from src.core.audio_processing.domains import TrackEmbedding
 
+
 @dataclass(slots=True)
 class Track:
     id: int

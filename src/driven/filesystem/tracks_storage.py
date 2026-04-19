@@ -4,7 +4,8 @@ import aiofiles
 from pathlib import Path
 import uuid
 
-class LocalTracksStorage(): # соответствует TracksStoragePort
+
+class LocalTracksStorage:  # соответствует TracksStoragePort
     def __init__(self, store_path: Path) -> None:
         self._store_path: Path = store_path
 
@@ -18,7 +19,6 @@ class LocalTracksStorage(): # соответствует TracksStoragePort
 
         return all(c in allowed for c in file_id)
 
-
     def _get_file_path(self, file_id: str) -> Path:
         """
         Преобразует идентификатор в путь файла внутри хранилища.
@@ -26,14 +26,15 @@ class LocalTracksStorage(): # соответствует TracksStoragePort
         """
 
         if not self.is_safe_id(file_id):
-            raise ValueError("Unsafe filename. Failed to get file path in TracksStorageSystem")
+            raise ValueError(
+                "Unsafe filename. Failed to get file path in TracksStorageSystem"
+            )
 
         subdir1 = file_id[:2]
         subdir2 = file_id[2:4]
         file_path = self._store_path / subdir1 / subdir2 / file_id
 
         return file_path
-
 
     async def save(self, data: bytes) -> str:
         file_id = str(uuid.uuid4())
