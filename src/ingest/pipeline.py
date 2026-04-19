@@ -141,7 +141,7 @@ class IngestPipeline:
 
                     processed = succeeded + failed + skipped
                     if processed % 10 == 0:
-                        print(f"📊 Прогресс: {processed}/{len(files)} [✅ {succeeded} | ⏭️ {skipped} | ❌ {failed}]")
+                        print(f"Прогресс: {processed}/{len(files)} [✅ {succeeded} | ⏭️ {skipped} | ❌ {failed}]")
 
             # Запускаем все задачи
             tasks = [bounded_process(f) for f in files]
