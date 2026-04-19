@@ -9,9 +9,6 @@ class AudioFeatures(TypedDict):
     spectral_bandwidth: np.ndarray
     spectral_contrast: np.ndarray
     chroma_stft: np.ndarray
-    chroma_cqt: np.ndarray
-    chroma_cens: np.ndarray
-    tonal: np.ndarray
     rmse: np.ndarray
     tempo: float
     zero_crossing_rate: np.ndarray
@@ -51,15 +48,6 @@ class AudioProcessor:
         features["chroma_stft"] = librosa.feature.chroma_stft(
             y=audio, sr=self.sample_rate
         )
-        features["chroma_cqt"] = librosa.feature.chroma_cqt(
-            y=audio, sr=self.sample_rate
-        )
-        features["chroma_cens"] = librosa.feature.chroma_cens(
-            y=audio, sr=self.sample_rate
-        )
-
-        # Тональные
-        features["tonal"] = librosa.feature.tonnetz(y=audio, sr=self.sample_rate)
 
         # Energy features
         features["rmse"] = librosa.feature.rms(y=audio)
@@ -96,12 +84,9 @@ class AudioProcessor:
                     vector_parts.append(np.array([np.mean(spec_feat)]))
 
         # Chroma
-        chroma_keys = ['chroma_stft', 'chroma_cqt', 'chroma_cens']
-        for key in chroma_keys:
-            if key in features:
-                chroma = features[key]
-                chroma_mean = np.mean(chroma, axis=1)
-                vector_parts.append(chroma_mean)
+        chroma = features['chroma_stft']
+        chroma_mean = np.mean(chroma, axis=1)
+        vector_parts.append(chroma_mean)
 
         # Тональные
         if 'tonal' in features:
