@@ -3,6 +3,8 @@ from src.core.tracks.services import TracksCrudService
 from src.driver.rest.depends.tracks import get_tracks_service, get_tracks_storage
 from src.driver.rest.dto.tracks import TrackDTO
 from src.core.tracks.ports import TracksStoragePort
+from src.driver.rest.depends.recommendation import get_recommendation_service
+from src.core.recommendation.services import RecommendationService
 
 
 router = APIRouter(prefix="/tracks")
@@ -79,3 +81,20 @@ async def get_track_audio(
             "Content-Disposition": f'inline; filename="{track.title}.mp3"'
         }
     )
+
+
+@router.get("/{track_id}/similar")
+async def similar_tracks(
+    track_id: int,
+    k: int = Query(10, ge=1, le=20),
+    service: RecommendationService = Depends(get_recommendation_service),
+):
+    results = await service.get_similar_tracks(track_id, k)
+
+    return [
+        {
+            "track": TrackDTO.from_domain(track),
+            "score": score,
+        }
+        for track, score in results
+    ]

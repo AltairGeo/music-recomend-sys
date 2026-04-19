@@ -5,27 +5,40 @@ from .api import api_router
 
 from contextlib import asynccontextmanager
 
+import logging
+
+_log = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from src.driven.database.tracks.dao import TracksCrudDao
     from src.core.tracks.services import TracksCrudService
     from src.driven.filesystem.tracks_storage import LocalTracksStorage
     from src.settings import app_config
+    from src.driven.recommendation.annoy_adapter import AnnoyRecommendationAdapter
+    from src.driven.database.tracks.dao import EmbeddingsCrudDAO
+    from src.core.recommendation.services import RecommendationService
 
     tracks_dao = TracksCrudDao()
     storage = LocalTracksStorage(app_config.music_data_folder / "tracks")
-
+    embeddings_dao = EmbeddingsCrudDAO()
+    annoy_rec_adapter = AnnoyRecommendationAdapter(tracks_dao, embeddings_dao)
     tracks_service = TracksCrudService(tracks_dao)
+    rec_service = RecommendationService(annoy_rec_adapter, tracks_dao)
+
 
     app.state.tracks_service = tracks_service
     app.state.tracks_storage = storage
+    app.state.rec_service = rec_service
+
+    _log.info("Build index annoy...")
+    await rec_service.build_index()
+    _log.info("App started!")
 
     yield
 
 app = FastAPI(lifespan=lifespan)
 
-app.state.tracks_dao = None
-app.state.storage = None
 
 # ======+ Middlewares +======
 app.add_middleware(CORSMiddleware, "*", "*")

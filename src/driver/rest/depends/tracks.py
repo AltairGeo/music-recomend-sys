@@ -1,5 +1,9 @@
 from fastapi import Request
 from src.core.tracks.services import TracksCrudService
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.tracks.ports import TracksStoragePort
 
 
 def get_tracks_service(request: Request) -> TracksCrudService:
@@ -11,7 +15,7 @@ def get_tracks_service(request: Request) -> TracksCrudService:
     return service
 
 
-def get_tracks_storage(request: Request) -> TracksStoragePort:
+def get_tracks_storage(request: Request) -> "TracksStoragePort":
     storage = getattr(request.app.state, "tracks_storage", None)
 
     if storage is None:
