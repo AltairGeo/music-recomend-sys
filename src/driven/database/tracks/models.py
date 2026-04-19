@@ -36,7 +36,7 @@ class TrackModel(BaseModel):
             license=self.license,
             title=self.title,
             year=self.year,
-            embedding=TrackEmbedding(track_id=self.id, vector=self.embedding.vector),
+            embedding=TrackEmbedding(id=self.embedding_id, vector=self.embedding.vector),
             path_to_file=Path(self.path_to_file)
         )
 

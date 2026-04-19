@@ -17,5 +17,5 @@ class Track:
 
 @dataclass(slots=True)
 class TrackEmbedding:
-    track_id: int
+    id: int
     vector: list[float]
