@@ -5,12 +5,6 @@ from .api import api_router
 
 from contextlib import asynccontextmanager
 
-app = FastAPI()
-
-app.state.tracks_dao = None
-app.state.storage = None
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from src.driven.database.tracks.dao import TracksCrudDao
@@ -28,6 +22,10 @@ async def lifespan(app: FastAPI):
 
     yield
 
+app = FastAPI(lifespan=lifespan)
+
+app.state.tracks_dao = None
+app.state.storage = None
 
 # ======+ Middlewares +======
 app.add_middleware(CORSMiddleware, "*", "*")
