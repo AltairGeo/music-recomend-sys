@@ -25,7 +25,7 @@ class TrackModel(BaseModel):
 
     @property
     def audio_url(self) -> str:
-        return f"/api/tracks/{self.id}/audio"
+        return f"/api/v1/tracks/{self.id}/audio"
 
     def dump_to_domain(self) -> Track:
         return Track(
