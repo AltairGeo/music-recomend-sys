@@ -11,6 +11,10 @@ class AudioEmbeddingService:
         self.emb_dao = emb_dao
         self._audio_proccessor = audio_processor
 
+    def get_embedding(self, file: BinaryIO) -> list[float]:
+        embedding = self._audio_proccessor.create_embedding(file)
+        return embedding.tolist()
+
     async def create_embedding(self, file: BinaryIO) -> TrackEmbedding:
         embedding = self._audio_proccessor.create_embedding(file)
         vector = embedding.tolist()

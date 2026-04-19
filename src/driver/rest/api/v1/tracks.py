@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+import io
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile, File
 from src.core.tracks.services import TracksCrudService
 from src.driver.rest.depends.tracks import get_tracks_service, get_tracks_storage
 from src.driver.rest.dto.tracks import TrackDTO
 from src.core.tracks.ports import TracksStoragePort
 from src.driver.rest.depends.recommendation import get_recommendation_service
 from src.core.recommendation.services import RecommendationService
-
+from src.core.audio_processing.services import AudioEmbeddingService
+from src.driver.rest.depends.audio_processing import get_embedding_service
+from src.driver.rest.dto.tracks import UploadTrackResult
 
 router = APIRouter(prefix="/tracks")
 
@@ -98,3 +101,31 @@ async def similar_tracks(
         }
         for track, score in results
     ]
+
+
+@router.post("/")
+async def upload_track(
+    file: UploadFile = File(...),
+    tracks_service: TracksCrudService = Depends(get_tracks_service),
+    emb_service: AudioEmbeddingService = Depends(get_embedding_service),
+    rec_service: RecommendationService = Depends(get_recommendation_service),
+) -> UploadTrackResult:
+
+    audio_bytes = await file.read()
+    file_io = io.BytesIO(audio_bytes)
+
+    embedding =  emb_service.get_embedding(file_io)
+
+    similar = await rec_service.get_similar_by_vector(
+            embedding,
+            k=10
+    )
+    result = []
+    for track, score in similar:
+        result.append(
+            (TrackDTO.from_domain(track), score)
+        )
+
+    return UploadTrackResult(
+        result=result
+    )

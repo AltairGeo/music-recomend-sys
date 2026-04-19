@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 from src.core.tracks.domains import Track
 
@@ -26,3 +27,7 @@ class TrackDTO(BaseModel):
             license=track.license,
             audio_url=track.audio_url,
         )
+
+
+class UploadTrackResult(BaseModel):
+    result: List[tuple[TrackDTO, float]]

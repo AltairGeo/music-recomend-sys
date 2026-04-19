@@ -18,6 +18,8 @@ async def lifespan(app: FastAPI):
     from src.driven.recommendation.annoy_adapter import AnnoyRecommendationAdapter
     from src.driven.database.tracks.dao import EmbeddingsCrudDAO
     from src.core.recommendation.services import RecommendationService
+    from src.core.audio_processing.services import AudioEmbeddingService
+    from src.core.audio_processing.processor import AudioProcessor
 
     tracks_dao = TracksCrudDao()
     storage = LocalTracksStorage(app_config.music_data_folder / "tracks")
@@ -25,11 +27,16 @@ async def lifespan(app: FastAPI):
     annoy_rec_adapter = AnnoyRecommendationAdapter(tracks_dao, embeddings_dao)
     tracks_service = TracksCrudService(tracks_dao)
     rec_service = RecommendationService(annoy_rec_adapter, tracks_dao)
-
+    embeddings_service = AudioEmbeddingService(
+        AudioProcessor(),
+        embeddings_dao
+    )
 
     app.state.tracks_service = tracks_service
     app.state.tracks_storage = storage
     app.state.rec_service = rec_service
+    app.state.embeddings_service = embeddings_service
+
 
     _log.info("Build index annoy...")
     await rec_service.build_index()
