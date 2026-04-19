@@ -14,3 +14,5 @@ wheels/
 # Custom
 app.db
 mus_storage/
+
+digest.txt
