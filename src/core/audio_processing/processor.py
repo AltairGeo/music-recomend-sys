@@ -9,9 +9,11 @@ class AudioFeatures(TypedDict):
     spectral_bandwidth: np.ndarray
     spectral_contrast: np.ndarray
     chroma_stft: np.ndarray
+    chroma_cqt: np.ndarray
     rmse: np.ndarray
     tempo: float
     zero_crossing_rate: np.ndarray
+    tonnetz: np.ndarray
 
 
 class AudioProcessor:
@@ -47,6 +49,7 @@ class AudioProcessor:
         features["chroma_stft"] = librosa.feature.chroma_stft(
             y=audio, sr=self.sample_rate
         )
+        features["chroma_cqt"] = librosa.feature.chroma_cqt(y=audio, sr=self.sample_rate)
 
         # Energy features
         features["rmse"] = librosa.feature.rms(y=audio)
@@ -55,6 +58,12 @@ class AudioProcessor:
         features["tempo"], _ = librosa.beat.beat_track(y=audio, sr=self.sample_rate)  # type: ignore
 
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
+
+
+        # tonal
+
+        tonnetz = librosa.feature.tonnetz(y=audio, sr=self.sample_rate)
+        features["tonnetz"] = tonnetz
 
         return features
 
@@ -86,6 +95,9 @@ class AudioProcessor:
         chroma_mean = np.mean(chroma, axis=1)
         vector_parts.append(chroma_mean)
 
+        chroma_cqt = np.mean(features["chroma_cqt"], axis=1)
+        vector_parts.append(chroma_cqt)
+
         # Тональные
         if "tonal" in features:
             tonal = features["tonal"]
@@ -102,6 +114,11 @@ class AudioProcessor:
         if "tempo" in features:
             tempo = features["tempo"]
             vector_parts.append(np.array([tempo]))
+
+        # Tonnetz
+        tonnetz_mean = np.mean(features["tonnetz"], axis=1)
+        tonnetz_std = np.std(features["tonnetz"], axis=1)
+        vector_parts.extend([tonnetz_mean, tonnetz_std])
 
         final_vector = np.concatenate([part.flatten() for part in vector_parts])
 

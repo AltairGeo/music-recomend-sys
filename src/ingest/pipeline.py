@@ -65,19 +65,22 @@ class IngestPipeline:
         loop = asyncio.get_running_loop()
         try:
             metadata, embedding, audio_bytes = await loop.run_in_executor(executor, process_file, file_path)
+
+            print(f"длинна эмбеддинга - {len(embedding.tolist())}")
+
             file_hash = compute_file_hash(audio_bytes)
 
             existing_id = await self.tracks_dao.find_by_file_hash(file_hash)
             if existing_id:
                 _log.info(f"⏭️ Skipping {file_path.name} (already exists, id={existing_id})")
-                return False, 'skipped'  # <-- ВОТ
+                return False, 'skipped'
 
             file_id = await self.storage.save(audio_bytes)
             embedding_id = await self.emb_dao.create(embedding.tolist())
 
             if not embedding_id:
                 _log.error(f"Failed to create embedding for {file_path}")
-                return False, 'error'  # <-- ВОТ
+                return False, 'error'
 
             track = Track(
                 id=0,
@@ -97,13 +100,13 @@ class IngestPipeline:
             track_id = await self.tracks_dao.create(track)
             if track_id:
                 _log.info(f"✅ Added track {track_id}: {track.title} - {track.artist}")
-                return True, 'success'  # <-- ВОТ
+                return True, 'success'
             else:
-                return False, 'error'  # <-- ВОТ
+                return False, 'error'
 
         except Exception as e:
             _log.error(f"Failed to process {file_path}: {e}", exc_info=True)
-            return False, 'error'  # <-- ВОТ
+            return False, 'error'
 
     async def run(self, root_dir: Path, limit: Optional[int] = None) -> dict:
         """
