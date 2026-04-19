@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.audio_processing.domains import TrackEmbedding
 
 @dataclass(slots=True)
 class Track:
@@ -13,9 +16,4 @@ class Track:
     license: str
     audio_url: str
     embedding: "TrackEmbedding"
-    path_to_file: Path
-
-@dataclass(slots=True)
-class TrackEmbedding:
-    id: int
-    vector: list[float]
+    file_id: str

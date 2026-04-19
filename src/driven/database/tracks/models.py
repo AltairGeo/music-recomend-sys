@@ -18,7 +18,7 @@ class TrackModel(BaseModel):
     license: Mapped[str]
     embedding_id: Mapped[int] = mapped_column(ForeignKey("tracks_embeddings.id"), nullable=False)
     embedding: Mapped["TrackEmbeddingModel"] = relationship(lazy="joined")
-    path_to_file: Mapped[str] = mapped_column(String(512), nullable=False)
+    file_id: Mapped[str] = mapped_column(String(256), nullable=False)
 
 
     @property
@@ -37,7 +37,7 @@ class TrackModel(BaseModel):
             title=self.title,
             year=self.year,
             embedding=TrackEmbedding(id=self.embedding_id, vector=self.embedding.vector),
-            path_to_file=Path(self.path_to_file)
+            file_id=self.file_id
         )
 
 class TrackEmbeddingModel(BaseModel):
