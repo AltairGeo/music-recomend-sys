@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+.env
+
 # Custom
 app.db
 mus_storage/

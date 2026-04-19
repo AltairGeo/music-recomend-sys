@@ -1,6 +1,6 @@
 from typing import BinaryIO
 from .processor import AudioProcessor
-from src.core.tracks.domains import TrackEmbedding
+from src.core.audio_processing.domains import TrackEmbedding
 from src.core.tracks.ports import EmbeddingsCrudPort
 
 

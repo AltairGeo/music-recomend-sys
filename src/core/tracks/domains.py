@@ -18,3 +18,4 @@ class Track:
     audio_url: str
     embedding: "TrackEmbedding"
     file_id: str
+    file_hash: str

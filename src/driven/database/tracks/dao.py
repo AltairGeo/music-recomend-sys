@@ -1,4 +1,5 @@
-from typing import Sequence
+from typing import Sequence, Unpack
+from src.core.tracks.types import ReadTrackFilters
 from src.driven.database.tracks.models import TrackModel, TrackEmbeddingModel
 from src.core.tracks.domains import Track
 from src.driven.database.session import async_session_maker
@@ -11,10 +12,10 @@ _log = logging.getLogger(__name__)
 
 
 class TracksCrudDao:
-    async def create(self, model: Track, embedding_id: int) -> int | None:
+    async def create(self, model: Track) -> int | None:
         try:
             async with async_session_maker() as session:
-                db_track = trackDomTOtrackMod(model, embedding_id)
+                db_track = trackDomTOtrackMod(model, model.embedding.id)
 
                 session.add(db_track)
                 await session.commit()
@@ -32,7 +33,7 @@ class TracksCrudDao:
             return res.dump_to_domain()
 
     async def read(
-        self, skip: int = 0, limit: int = 100, **filters
+        self, skip: int = 0, limit: int = 100, **filters: Unpack[ReadTrackFilters]
     ) -> ReadDTO[Track] | None:
         try:
             async with async_session_maker() as session:
@@ -62,6 +63,16 @@ class TracksCrudDao:
 
             return [i.dump_to_domain() for i in res]
 
+    async def find_by_file_hash(self, file_hash: str) -> int | None:
+            """Возвращает ID трека по хешу файла или None."""
+            try:
+                async with async_session_maker() as session:
+                    stmt = select(TrackModel.id).where(TrackModel.file_hash == file_hash)
+                    result = await session.execute(stmt)
+                    return result.scalar_one_or_none()
+            except Exception as e:
+                _log.error("TracksCrudDao error in find_by_file_hash: %s", e)
+                return None
 
 class EmbeddingsCrudDAO:
     async def create(self, vector: list[float]) -> int | None:
