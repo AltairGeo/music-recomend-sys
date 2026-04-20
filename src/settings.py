@@ -15,7 +15,7 @@ class MainConfig:
         self.db = db_config
         self.per_page: int = 25
         self.n_mfcc: int = 13
-        self.music_data_folder: Path = Path("mus_storage")
+        self.music_data_folder: Path = Path(os.getenv("APP_LOCAL_STORAGE", "mus_storag"))
 
 
 app_config = MainConfig()
