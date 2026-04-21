@@ -28,6 +28,7 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
 
             print("BEFORE EMBEDDING!")
             result: list[float] = audio_processor.create_embedding(io.BytesIO(audio_bytes)).tolist()
+            print("AFTER EMBEDDING")
             print("Create embedding for \"%s\"", item)
 
             metadata = extract_metadata(item.tpath)
