@@ -14,14 +14,15 @@ def cli():
 
 @cli.command()
 @click.argument("directory", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option("--limit", default=0, type=int)
 @click.option("--workers", default=4, type=int, help="Количество параллельных воркеров")
-def ingest(directory: str, workers: int):
+def ingest(directory: str, limit: int, workers: int):
     """Загрузить аудиофайлы из ДИРЕКТОРИИ в систему"""
     pipeline = IngestPipeline(max_workers=workers)
 
     try:
         asyncio.run(
-           pipeline.run(Path(directory))
+           pipeline.run(Path(directory), None if limit == 0 else limit)
        )
     except KeyboardInterrupt:
         print("\n⚠️ Прервано пользователем")

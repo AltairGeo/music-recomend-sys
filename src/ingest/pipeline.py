@@ -79,7 +79,7 @@ class IngestPipeline:
 
         return paths_to_hash
 
-    async def run(self, root_dir: Path):
+    async def run(self, root_dir: Path, limit: int|None = None):
         loop = asyncio.get_event_loop()
 
 
@@ -93,7 +93,16 @@ class IngestPipeline:
 
         _log.info("Ingest: Create rqueues!")
 
+
+
         files = self.__find_audio_files(root_dir)
+
+        if  (limit is not None) and (limit < 2):
+            limit = None
+
+        if limit:
+            files = files[:limit]
+
 
         unprocessed_paths = await self.__get_unprocessed_paths(files)
 
