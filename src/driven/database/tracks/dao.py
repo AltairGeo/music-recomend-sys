@@ -19,7 +19,8 @@ class TracksCrudDao:
 
                 session.add(db_track)
                 await session.commit()
-                return True
+                await session.flush()
+                return db_track.id
         except Exception as e:
             _log.error("TracksCrudDao error in create method: %s", e)
             return None
@@ -74,6 +75,16 @@ class TracksCrudDao:
                 _log.error("TracksCrudDao error in find_by_file_hash: %s", e)
                 return None
 
+    async def get_hashs(self) -> Sequence[str]:
+        try:
+            async with async_session_maker() as session:
+                stmt = select(TrackModel.file_hash)
+                result = await session.execute(stmt)
+                return result.scalars().all()
+        except Exception as e:
+            _log.error("TracksCrudDAO error in get_hashs metod: %s", e)
+            return []
+
 class EmbeddingsCrudDAO:
     async def create(self, vector: list[float]) -> int | None:
         try:
@@ -81,6 +92,7 @@ class EmbeddingsCrudDAO:
                 obj = TrackEmbeddingModel(vector=vector)
                 session.add(obj)
                 await session.commit()
+                await session.flush()
                 return obj.id
         except Exception as e:
             _log.error("EmbeddingCrudDAO error in create method: %s", e)
