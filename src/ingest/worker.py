@@ -17,6 +17,7 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
             item = input_queue.get()
 
             if item is None:
+                print("BREAK CALL!")
                 break
 
             with open(item.tpath, "rb") as file:
@@ -43,6 +44,6 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
                 )
             )
         except Exception as e:
-                print(f"Error in ingest embedding_worker: {e}")
+            print(f"Error in ingest embedding_worker: {e}")
 
     print("WORKER STOP!")
