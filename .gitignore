@@ -16,3 +16,5 @@ app.db
 mus_storage/
 
 digest.txt
+
+musservice.log
