@@ -10,11 +10,13 @@ _log = logging.getLogger(__name__)
 
 def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[TrackProcessed|None]):
     audio_processor = AudioProcessor()
-    print("WORKER START!")
+    print("WORKER START!", flush=True)
 
     while True:
         try:
+            print("BEFORE GET", flush=True)
             item = input_queue.get()
+            print("AFTER GET", flush=True)
 
             if item is None:
                 print("BREAK CALL!")
