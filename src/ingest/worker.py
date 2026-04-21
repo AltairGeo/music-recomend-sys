@@ -26,6 +26,7 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
                 audio_bytes = file.read()
 
 
+            print("BEFORE EMBEDDING!")
             result: list[float] = audio_processor.create_embedding(io.BytesIO(audio_bytes)).tolist()
             print("Create embedding for \"%s\"", item)
 
