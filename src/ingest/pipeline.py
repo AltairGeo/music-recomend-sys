@@ -108,8 +108,12 @@ class IngestPipeline:
 
         _log.info("Ingest: Find audio and getted only unprocessed")
 
+        counter = 0
         for tpath, thash in unprocessed_paths.items():
             input_q.put(TrackQueueIn(tpath=tpath, thash=thash))
+            counter += 1
+
+        _log.info("Ingest: queue - %s", counter)
 
         #
         # Создание процессов-воркеров
