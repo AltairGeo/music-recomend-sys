@@ -12,6 +12,7 @@ _log = logging.getLogger(__name__)
 
 async def async_embedding_saver(output_queue: Queue[TrackProcessed|None], tracks_dao: TracksCrudPort, storage: TracksStoragePort, embeddings_dao: EmbeddingsCrudPort):
 
+    print("Track saver STARTED!")
     while True:
         try:
             result = await asyncio.to_thread(output_queue.get)
@@ -46,10 +47,27 @@ async def async_embedding_saver(output_queue: Queue[TrackProcessed|None], tracks
 
             track_id = await tracks_dao.create(track)
 
+
+
             if not track_id:
                 _log.warning("NO TRACK ID: %s, RESULT_OBJ: %s, track_OBJ: %s", track_id, result, track)
 
-            _log.info("Ingest a track with id: %s", track_id)
+            print(f"Ingest a track with id: {track_id}")
 
         except Exception as e:
-            _log.error("Error in async_embedding_saver: %s", e)
+            print(f"Error in async_embedding_saver: {e}")
+
+def embedding_writer_process(
+    output_queue: Queue,
+    tracks_dao,
+    storage,
+    embeddings_dao,
+):
+    asyncio.run(
+        async_embedding_saver(
+            output_queue=output_queue,
+            tracks_dao=tracks_dao,
+            storage=storage,
+            embeddings_dao=embeddings_dao,
+        )
+    )

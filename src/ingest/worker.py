@@ -10,6 +10,7 @@ _log = logging.getLogger(__name__)
 
 def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[TrackProcessed|None]):
     audio_processor = AudioProcessor()
+    print("WORKER START!")
 
     while True:
         try:
@@ -23,7 +24,7 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
 
 
             result: list[float] = audio_processor.create_embedding(io.BytesIO(audio_bytes)).tolist()
-            _log.info("Create embedding for \"%s\"", item)
+            print("Create embedding for \"%s\"", item)
 
             metadata = extract_metadata(item.tpath)
 
@@ -42,4 +43,6 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
                 )
             )
         except Exception as e:
-            _log.error("Error in ingest embedding_worker: %s", e)
+                print(f"Error in ingest embedding_worker: {e}")
+
+    _log.info("WORKER STOP!")

@@ -1,13 +1,13 @@
 import asyncio
 import logging
-from multiprocessing import Queue, Process, process
+from multiprocessing import Queue, Process
 from src.core.tracks.domains import Track
 from src.settings import app_config
 from src.driven.database.tracks.dao import EmbeddingsCrudDAO, TracksCrudDao
 from src.driven.filesystem.tracks_storage import LocalTracksStorage
 from src.driven.database.session import create_db_and_tables
 from .dto import TrackProcessed, TrackQueueIn
-from .async_saver import async_embedding_saver
+from .async_saver import embedding_writer_process
 
 from pathlib import Path
 from .hasher import compute_file_hash
@@ -120,19 +120,25 @@ class IngestPipeline:
         for p in processes:
             p.start()
 
-        async def __run_writter():
-            await async_embedding_saver(output_queue=output_q, storage=self.storage, tracks_dao=self.tracks_dao, embeddings_dao=self.emb_dao)
 
-        loop.create_task(
-            __run_writter()
+
+        writer_process = Process(
+            target=embedding_writer_process,
+            args=(output_q,  self.tracks_dao, self.storage, self.emb_dao),
         )
 
-        for _ in processes:
-            input_q.put(None)
+        writer_process.start()
 
         _log.info("Workers has started!")
 
+        for _ in range(self._max_workers):
+            input_q.put(None)
+
         for p in processes:
             p.join()
+
+        output_q.put(None)
+        writer_process.join()
+
 
         _log.info("END OF WORK!")
