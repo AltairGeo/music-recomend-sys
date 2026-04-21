@@ -37,10 +37,6 @@ class IngestPipeline:
             - читает аудио
             - извлекает embedding
             - парсит metadata
-
-    Важно:
-        worker НЕ возвращает audio_bytes
-        это предотвращает OOM и BrokenProcessPool
     """
 
     def __init__(
