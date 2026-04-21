@@ -4,6 +4,7 @@ from multiprocessing import Queue
 from .dto import TrackProcessed, TrackQueueIn
 from pathlib import Path
 from .metadata import extract_metadata
+import io
 
 _log = logging.getLogger(__name__)
 
@@ -19,8 +20,10 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
 
             with open(item.tpath, "rb") as file:
                 audio_bytes = file.read()
-                result: list[float] = audio_processor.create_embedding(file).tolist()
-                _log.info("Create embedding for \"%s\"", item)
+
+
+            result: list[float] = audio_processor.create_embedding(io.BytesIO(audio_bytes)).tolist()
+            _log.info("Create embedding for \"%s\"", item)
 
             metadata = extract_metadata(item.tpath)
 
