@@ -1,95 +1,42 @@
-from pathlib import Path
-from typing import Dict, Any
-import io
-import traceback
-import hashlib
 import logging
-
 from src.core.audio_processing.processor import AudioProcessor
-from src.ingest.metadata import extract_metadata
-from src.settings import app_config
+from multiprocessing import Queue
+from .dto import TrackProcessed, TrackQueueIn
+from pathlib import Path
+from .metadata import extract_metadata
 
 _log = logging.getLogger(__name__)
 
+def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[TrackProcessed|None]):
+    audio_processor = AudioProcessor()
 
-def compute_file_hash(file_bytes: bytes) -> str:
-    """
-    Стабильный SHA-256 хэш содержимого файла.
-    Используется для защиты от дубликатов.
-    """
-    return hashlib.sha256(file_bytes).hexdigest()
+    while True:
+        try:
+            item = input_queue.get()
 
+            if item is None:
+                break
 
-def process_file_job(file_path: str, result_queue) -> None:
-    """
-    Обрабатывает один файл в отдельном процессе.
+            with open(item.tpath, "rb") as file:
+                audio_bytes = file.read()
+                result: list[float] = audio_processor.create_embedding(file).tolist()
+                _log.info("Create embedding for \"%s\"", item)
 
-    Формат успешного ответа:
-        {
-            "file_path": "...",
-            "ok": True,
-            "metadata": {...},
-            "embedding": [float, float, ...],
-            "error": None
-        }
+            metadata = extract_metadata(item.tpath)
 
-    Формат ошибки:
-        {
-            "file_path": "...",
-            "ok": False,
-            "metadata": None,
-            "embedding": None,
-            "error": "traceback..."
-        }
-    """
-    path = Path(file_path)
-
-    try:
-        # Создаём процессор внутри процесса.
-        # Так безопаснее, чем пытаться шарить его между процессами.
-        processor = AudioProcessor(
-            sample_rate=22050,
-            n_mfcc=app_config.n_mfcc,
-        )
-
-        # Метаданные читаем отдельно.
-        metadata = extract_metadata(path)
-
-        # Читаем байты только в worker-процессе.
-        # Это нужно для вычисления embedding.
-        with path.open("rb") as f:
-            audio_bytes = f.read()
-
-        audio_io = io.BytesIO(audio_bytes)
-
-        embedding = processor.create_embedding(audio_io)
-
-        # Переводим embedding в обычный list,
-        # чтобы результат был простым для передачи через очередь.
-        if hasattr(embedding, "tolist"):
-            embedding_list = embedding.tolist()
-        else:
-            embedding_list = list(embedding)
-
-        result_queue.put(
-            {
-                "file_path": file_path,
-                "ok": True,
-                "metadata": metadata,
-                "embedding": embedding_list,
-                "error": None,
-            }
-        )
-
-    except Exception:
-        # Возвращаем traceback как строку.
-        # Это сильно упрощает отладку.
-        result_queue.put(
-            {
-                "file_path": file_path,
-                "ok": False,
-                "metadata": None,
-                "embedding": None,
-                "error": traceback.format_exc(),
-            }
-        )
+            output_queue.put(
+                TrackProcessed(
+                    title=metadata.get("title", item.tpath.stem),
+                    artist=metadata.get("artist", "Unknown"),
+                    genre=metadata.get("genre", "Undefined"),
+                    year=metadata.get("year", 0),
+                    album=metadata.get("album", "Undefined"),
+                    additional_info=metadata.get("additional_info", ""),
+                    license=metadata.get("license", "Creative Commons"),
+                    embedding=result,
+                    file_hash=item.thash,
+                    audio_raw=audio_bytes
+                )
+            )
+        except Exception as e:
+            _log.error("Error in ingest embedding_worker: %s", e)

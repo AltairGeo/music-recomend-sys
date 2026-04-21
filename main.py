@@ -2,6 +2,8 @@ import click
 import asyncio
 from pathlib import Path
 from src.ingest.pipeline import IngestPipeline
+from src.logs import set_logs
+
 
 
 @click.group()
@@ -12,25 +14,15 @@ def cli():
 
 @cli.command()
 @click.argument("directory", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option("--limit", default=None, type=int, help="Максимальное количество файлов для обработки")
 @click.option("--workers", default=4, type=int, help="Количество параллельных воркеров")
-def ingest(directory: str, limit: int, workers: int):
+def ingest(directory: str, workers: int):
     """Загрузить аудиофайлы из ДИРЕКТОРИИ в систему"""
     pipeline = IngestPipeline(max_workers=workers)
 
     try:
-        stats = asyncio.run(pipeline.run(Path(directory), limit))
-
-        # Красивый вывод итогов
-        print("\n" + "="*50)
-        print("📊 ИТОГИ ОБРАБОТКИ")
-        print("="*50)
-        print(f"✅ Успешно добавлено: {stats['succeeded']}")
-        print(f"⏭️ Пропущено (уже в БД): {stats['skipped']}")
-        print(f"❌ Ошибок: {stats['failed']}")
-        print(f"📁 Всего обработано: {stats['succeeded'] + stats['failed'] + stats['skipped']}")
-        print("="*50)
-
+        asyncio.run(
+           pipeline.run(Path(directory))
+       )
     except KeyboardInterrupt:
         print("\n⚠️ Прервано пользователем")
     except Exception as e:
@@ -69,4 +61,5 @@ def init_db():
 
 
 if __name__ == "__main__":
+    set_logs()
     cli()
