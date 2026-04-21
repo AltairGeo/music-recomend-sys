@@ -14,21 +14,16 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
 
     while True:
         try:
-            print("BEFORE GET", flush=True)
             item = input_queue.get()
-            print("AFTER GET", flush=True)
 
             if item is None:
-                print("BREAK CALL!")
                 break
 
             with open(item.tpath, "rb") as file:
                 audio_bytes = file.read()
 
 
-            print("BEFORE EMBEDDING!")
             result: list[float] = audio_processor.create_embedding(io.BytesIO(audio_bytes)).tolist()
-            print("AFTER EMBEDDING")
             print("Create embedding for \"%s\"", item)
 
             metadata = extract_metadata(item.tpath)
