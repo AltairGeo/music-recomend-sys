@@ -144,5 +144,5 @@ class IngestPipeline:
         output_q.put(None)
         writer_process.join()
 
-
+        input("Press enter to exit...")
         _log.info("END OF WORK!")
