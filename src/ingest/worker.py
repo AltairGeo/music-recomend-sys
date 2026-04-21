@@ -45,4 +45,4 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
         except Exception as e:
                 print(f"Error in ingest embedding_worker: {e}")
 
-    _log.info("WORKER STOP!")
+    print("WORKER STOP!")

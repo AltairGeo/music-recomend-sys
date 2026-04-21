@@ -50,7 +50,7 @@ async def async_embedding_saver(output_queue: Queue[TrackProcessed|None], tracks
 
 
             if not track_id:
-                _log.warning("NO TRACK ID: %s, RESULT_OBJ: %s, track_OBJ: %s", track_id, result, track)
+                print(f"NO TRACK ID: {track_id}, RESULT_OBJ: {result}, track_OBJ: {track}")
 
             print(f"Ingest a track with id: {track_id}")
 
