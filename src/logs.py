@@ -8,7 +8,7 @@ def set_logs() -> None:
     logging.basicConfig(
         format=_log_format,
         level=logging.INFO,
-        filename="habroscrapper.log",
+        filename="musservice.log",
     )
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
