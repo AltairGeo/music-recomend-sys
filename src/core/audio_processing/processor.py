@@ -11,7 +11,7 @@ class AudioFeatures(TypedDict):
     chroma_stft: np.ndarray
     chroma_cqt: np.ndarray
     rmse: np.ndarray
-    tempo: float
+    # tempo: float
     zero_crossing_rate: np.ndarray
     tonnetz: np.ndarray
 
@@ -55,7 +55,8 @@ class AudioProcessor:
         features["rmse"] = librosa.feature.rms(y=audio)
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
 
-        features["tempo"], *_ = librosa.beat.beat_track(y=audio, sr=self.sample_rate) # type: ignore
+        # !!! UNSTABLE PARAMETR!!!
+        # features["tempo"], *_ = librosa.beat.beat_track(y=audio, sr=self.sample_rate) # type: ignore
 
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
 
