@@ -55,7 +55,7 @@ class AudioProcessor:
         features["rmse"] = librosa.feature.rms(y=audio)
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
 
-        features["tempo"], _ = librosa.beat.beat_track(y=audio, sr=self.sample_rate)  # type: ignore
+        features["tempo"], *_ = librosa.beat.beat_track(y=audio, sr=self.sample_rate) # type: ignore
 
         features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
 
