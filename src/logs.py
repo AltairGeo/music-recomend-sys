@@ -14,3 +14,10 @@ def set_logs() -> None:
     console.setLevel(logging.INFO)
     console.setFormatter(logging.Formatter(_log_format))
     logging.getLogger("").addHandler(console)
+
+
+def overwrite_uvicorn_logger() -> None:
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        logger = logging.getLogger(name)
+        logger.handlers.clear()
+        logger.propagate = True

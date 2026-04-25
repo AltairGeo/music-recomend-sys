@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from .api import api_router
+from src.logs import overwrite_uvicorn_logger
 
 from contextlib import asynccontextmanager
 
@@ -11,6 +12,9 @@ _log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    overwrite_uvicorn_logger()
+
     from src.driven.database.tracks.dao import TracksCrudDao
     from src.core.tracks.services import TracksCrudService
     from src.driven.filesystem.tracks_storage import LocalTracksStorage
