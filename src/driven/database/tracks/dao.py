@@ -85,6 +85,20 @@ class TracksCrudDao:
             _log.error("TracksCrudDAO error in get_hashs metod: %s", e)
             return []
 
+
+    async def get_random(self, n: int = 1) -> Sequence[Track]:
+        if n < 1:
+            raise ValueError(
+                "Error in get_random method of TracksCrudDAO. N cant be less than 1"
+            )
+
+        async with async_session_maker() as session:
+            res = await session.execute(
+                select(TrackModel).order_by(func.random()).limit(n)
+            )
+            return [i.dump_to_domain() for i in res.scalars().all()]
+
+
 class EmbeddingsCrudDAO:
     async def create(self, vector: list[float]) -> int | None:
         try:
