@@ -1,5 +1,4 @@
 import io
-from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile, File, status
 from src.core.tracks.services import TracksCrudService
 from src.driver.rest.depends.tracks import get_tracks_service, get_tracks_storage
@@ -9,7 +8,7 @@ from src.driver.rest.depends.recommendation import get_recommendation_service
 from src.core.recommendation.services import RecommendationService
 from src.core.audio_processing.services import AudioEmbeddingService
 from src.driver.rest.depends.audio_processing import get_embedding_service
-from src.driver.rest.dto.tracks import GetRandomTrackResult
+from src.driver.rest.dto.tracks import ListTracksResult
 
 router = APIRouter(prefix="/tracks")
 
@@ -18,7 +17,7 @@ router = APIRouter(prefix="/tracks")
     "/random",
     summary="Get random track",
     status_code=status.HTTP_200_OK,
-    response_model=GetRandomTrackResult
+    response_model=ListTracksResult
 )
 async def get_random_track(
     n: int = Query(1, gt=0, lt=20),
@@ -28,21 +27,22 @@ async def get_random_track(
 
     tracks = [TrackDTO.from_domain(i) for i in tracks]
 
-    return GetRandomTrackResult(
+    return ListTracksResult(
         total=len(tracks),
         tracks=tracks
     )
 
 
 
-@router.get("/search")
+@router.get("/search", response_model=ListTracksResult)
 async def search_tracks(
     q: str,
     service: TracksCrudService = Depends(get_tracks_service),
 ):
     tracks = await service.find_by_name(q)
+    tracks = [TrackDTO.from_domain(t) for t in tracks]
 
-    return [TrackDTO.from_domain(t) for t in tracks]
+    return ListTracksResult(tracks=tracks, total=len(tracks))
 
 
 @router.get("/{track_id}", response_model=TrackDTO)

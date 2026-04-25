@@ -29,9 +29,9 @@ class TrackDTO(BaseModel):
         )
 
 
-class GetRandomTrackResult(BaseModel):
+class ListTracksResult(BaseModel):
     tracks: List[TrackDTO]
-    total: Annotated[int, Field(gt=0, lt=20)]
+    total: Annotated[int, Field(ge=0)]
 
 
 class TrackListResult(BaseModel):
