@@ -10,6 +10,7 @@ import logging
 
 _log = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -31,22 +32,19 @@ async def lifespan(app: FastAPI):
     annoy_rec_adapter = AnnoyRecommendationAdapter(tracks_dao, embeddings_dao)
     tracks_service = TracksCrudService(tracks_dao)
     rec_service = RecommendationService(annoy_rec_adapter, tracks_dao)
-    embeddings_service = AudioEmbeddingService(
-        AudioProcessor(),
-        embeddings_dao
-    )
+    embeddings_service = AudioEmbeddingService(AudioProcessor(), embeddings_dao)
 
     app.state.tracks_service = tracks_service
     app.state.tracks_storage = storage
     app.state.rec_service = rec_service
     app.state.embeddings_service = embeddings_service
 
-
     _log.info("Build index annoy...")
     await rec_service.build_index()
     _log.info("App started!")
 
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 

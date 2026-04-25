@@ -5,7 +5,6 @@ from src.ingest.pipeline import IngestPipeline
 from src.logs import set_logs
 
 
-
 @click.group()
 def cli():
     """RecoMusic - музыкальная рекомендательная система"""
@@ -13,7 +12,9 @@ def cli():
 
 
 @cli.command()
-@click.argument("directory", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument(
+    "directory", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
 @click.option("--limit", default=0, type=int)
 @click.option("--workers", default=4, type=int, help="Количество параллельных воркеров")
 def ingest(directory: str, limit: int, workers: int):
@@ -21,9 +22,7 @@ def ingest(directory: str, limit: int, workers: int):
     pipeline = IngestPipeline(max_workers=workers)
 
     try:
-        asyncio.run(
-           pipeline.run(Path(directory), None if limit == 0 else limit)
-       )
+        asyncio.run(pipeline.run(Path(directory), None if limit == 0 else limit))
     except KeyboardInterrupt:
         print("\n⚠️ Прервано пользователем")
     except Exception as e:
@@ -34,19 +33,18 @@ def ingest(directory: str, limit: int, workers: int):
 @cli.command()
 @click.option("--host", default="0.0.0.0", help="Хост для запуска сервера")
 @click.option("--port", default=8000, help="Порт для запуска сервера")
-@click.option("--reload", is_flag=True, help="Автоматическая перезагрузка при изменениях (dev-режим)")
+@click.option(
+    "--reload",
+    is_flag=True,
+    help="Автоматическая перезагрузка при изменениях (dev-режим)",
+)
 def serve(host: str, port: int, reload: bool):
     """Запустить REST API сервер"""
     import uvicorn
     from src.driver.rest.app import app
 
     print(f"🚀 Запуск сервера на http://{host}:{port}")
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        reload=reload
-    )
+    uvicorn.run(app, host=host, port=port, reload=reload)
 
 
 @cli.command()

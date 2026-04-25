@@ -63,7 +63,7 @@ class AudioProcessor:
         return y
 
     def extract_features(self, audio: np.ndarray) -> AudioFeatures:
-        features: AudioFeatures = {} # type: ignore
+        features: AudioFeatures = {}  # type: ignore
 
         features["mfcc"] = librosa.feature.mfcc(
             y=audio,
@@ -123,7 +123,9 @@ class AudioProcessor:
             )
         except Exception:
             # Если CQT не удалось посчитать
-            features["chroma_cqt"] = np.zeros((12, max(1, len(audio) // self.hop_length + 1)))
+            features["chroma_cqt"] = np.zeros(
+                (12, max(1, len(audio) // self.hop_length + 1))
+            )
 
         features["rms"] = librosa.feature.rms(
             y=audio,
@@ -144,8 +146,9 @@ class AudioProcessor:
                 hop_length=self.hop_length,
             )
         except Exception:
-            features["tonnetz"] = np.zeros((6, max(1, len(audio) // self.hop_length + 1)))
-
+            features["tonnetz"] = np.zeros(
+                (6, max(1, len(audio) // self.hop_length + 1))
+            )
 
         return features
 

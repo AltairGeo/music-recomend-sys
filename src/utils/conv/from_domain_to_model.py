@@ -13,5 +13,5 @@ def trackDomTOtrackMod(track: Track, embedding_id: int) -> TrackModel:
         license=track.license,
         embedding_id=embedding_id,
         file_hash=track.file_hash,
-        file_id=track.file_id
+        file_id=track.file_id,
     )

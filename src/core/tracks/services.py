@@ -13,10 +13,11 @@ class TracksCrudService:
     async def list_tracks(self, skip: int = 0, limit: int = 25):
         return await self._tracks.read(skip=skip, limit=limit)
 
-
     async def get_random_track(self, n: int = 1) -> Sequence[Track]:
         if n < 1:
-            raise ValueError("TracksCrudService: get_random_track. n cant be less than 1")
+            raise ValueError(
+                "TracksCrudService: get_random_track. n cant be less than 1"
+            )
 
         return await self._tracks.get_random(n=n)
 

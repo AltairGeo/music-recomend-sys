@@ -14,6 +14,7 @@ from .worker import embedding_worker
 
 _log = logging.getLogger(__name__)
 
+
 class IngestPipeline:
     def __init__(self, max_workers: int = 4) -> None:
         self._max_workers = max_workers
@@ -29,9 +30,7 @@ class IngestPipeline:
         self.tracks_dao = TracksCrudDao()
         self.emb_dao = EmbeddingsCrudDAO()
 
-        self.storage = LocalTracksStorage(
-            app_config.music_data_folder / "tracks"
-        )
+        self.storage = LocalTracksStorage(app_config.music_data_folder / "tracks")
 
     def __find_audio_files(self, root_dir: Path) -> list[Path]:
 
@@ -77,28 +76,25 @@ class IngestPipeline:
 
         return paths_to_hash
 
-    async def run(self, root_dir: Path, limit: int|None = None):
+    async def run(self, root_dir: Path, limit: int | None = None):
 
         await create_db_and_tables()
 
         #
         # Создание очередей и их заполнение
         #
-        input_q: Queue[TrackQueueIn|None] = Queue()
-        output_q: Queue[TrackProcessed|None] = Queue()
+        input_q: Queue[TrackQueueIn | None] = Queue()
+        output_q: Queue[TrackProcessed | None] = Queue()
 
         _log.info("Ingest: Create rqueues!")
 
-
-
         files = self.__find_audio_files(root_dir)
 
-        if  (limit is not None) and (limit < 2):
+        if (limit is not None) and (limit < 2):
             limit = None
 
         if limit:
             files = files[:limit]
-
 
         unprocessed_paths = await self.__get_unprocessed_paths(files)
 
@@ -115,16 +111,17 @@ class IngestPipeline:
         # Создание процессов-воркеров
         #
 
-        processes = [Process(target=embedding_worker, args=(input_q, output_q)) for _ in range(self._max_workers)]
+        processes = [
+            Process(target=embedding_worker, args=(input_q, output_q))
+            for _ in range(self._max_workers)
+        ]
 
         for p in processes:
             p.start()
 
-
-
         writer_process = Process(
             target=embedding_writer_process,
-            args=(output_q,  self.tracks_dao, self.storage, self.emb_dao),
+            args=(output_q, self.tracks_dao, self.storage, self.emb_dao),
         )
 
         writer_process.start()

@@ -7,7 +7,10 @@ import io
 
 _log = logging.getLogger(__name__)
 
-def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[TrackProcessed|None]):
+
+def embedding_worker(
+    input_queue: Queue[TrackQueueIn | None], output_queue: Queue[TrackProcessed | None]
+):
     audio_processor = AudioProcessor()
     print("WORKER START!", flush=True)
 
@@ -21,9 +24,10 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
             with open(item.tpath, "rb") as file:
                 audio_bytes = file.read()
 
-
-            result: list[float] = audio_processor.create_embedding(io.BytesIO(audio_bytes)).tolist()
-            print("Create embedding for \"%s\"", item)
+            result: list[float] = audio_processor.create_embedding(
+                io.BytesIO(audio_bytes)
+            ).tolist()
+            print('Create embedding for "%s"', item)
 
             metadata = extract_metadata(item.tpath)
 
@@ -38,7 +42,7 @@ def embedding_worker(input_queue: Queue[TrackQueueIn|None], output_queue: Queue[
                     license=metadata.get("license", "Creative Commons"),
                     embedding=result,
                     file_hash=item.thash,
-                    audio_raw=audio_bytes
+                    audio_raw=audio_bytes,
                 )
             )
         except Exception as e:

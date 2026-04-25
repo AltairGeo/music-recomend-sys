@@ -7,9 +7,7 @@ class RecommendationService:
     MAX_K = 20  # Ограничение на количество рекомендаций
 
     def __init__(
-        self,
-        recommendation_port: RecommendationPort,
-        tracks_port: TracksCrudPort
+        self, recommendation_port: RecommendationPort, tracks_port: TracksCrudPort
     ):
         self._rec_port = recommendation_port
         self._tracks_port = tracks_port
@@ -18,7 +16,9 @@ class RecommendationService:
         """Перестроить индекс Annoy (вызывается при старте приложения)."""
         await self._rec_port.build_index()
 
-    async def get_similar_tracks(self, track_id: int, k: int = 10) -> list[tuple[Track, float]]:
+    async def get_similar_tracks(
+        self, track_id: int, k: int = 10
+    ) -> list[tuple[Track, float]]:
         """
         Получить похожие треки по ID существующего трека.
 
@@ -39,7 +39,9 @@ class RecommendationService:
 
         return await self._rec_port.find_similar_by_id(track_id, k)
 
-    async def get_similar_by_vector(self, vector: list[float], k: int = 10) -> list[tuple[Track, float]]:
+    async def get_similar_by_vector(
+        self, vector: list[float], k: int = 10
+    ) -> list[tuple[Track, float]]:
         """
         Получить похожие треки по вектору признаков (для загруженного файла).
 

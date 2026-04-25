@@ -1,6 +1,7 @@
 from fastapi import Request
 from src.core.audio_processing.services import AudioEmbeddingService
 
+
 def get_embedding_service(request: Request) -> AudioEmbeddingService:
     service = getattr(request.app.state, "embeddings_service", None)
 

@@ -10,7 +10,12 @@ from src.core.audio_processing.domains import TrackEmbedding
 _log = logging.getLogger(__name__)
 
 
-async def async_embedding_saver(output_queue: Queue[TrackProcessed|None], tracks_dao: TracksCrudPort, storage: TracksStoragePort, embeddings_dao: EmbeddingsCrudPort):
+async def async_embedding_saver(
+    output_queue: Queue[TrackProcessed | None],
+    tracks_dao: TracksCrudPort,
+    storage: TracksStoragePort,
+    embeddings_dao: EmbeddingsCrudPort,
+):
 
     print("Track saver STARTED!")
     while True:
@@ -37,25 +42,23 @@ async def async_embedding_saver(output_queue: Queue[TrackProcessed|None], tracks
                 additional_info=result.additional_info,
                 license=result.license,
                 audio_url="",
-                embedding=TrackEmbedding(
-                    id=embedding_id,
-                    vector=result.embedding
-                ),
+                embedding=TrackEmbedding(id=embedding_id, vector=result.embedding),
                 file_id=file_id,
-                file_hash=result.file_hash
+                file_hash=result.file_hash,
             )
 
             track_id = await tracks_dao.create(track)
 
-
-
             if not track_id:
-                print(f"NO TRACK ID: {track_id}, RESULT_OBJ: {result}, track_OBJ: {track}")
+                print(
+                    f"NO TRACK ID: {track_id}, RESULT_OBJ: {result}, track_OBJ: {track}"
+                )
 
             print(f"Ingest a track with id: {track_id}")
 
         except Exception as e:
             print(f"Error in async_embedding_saver: {e}")
+
 
 def embedding_writer_process(
     output_queue: Queue,

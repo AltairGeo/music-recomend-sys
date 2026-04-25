@@ -45,5 +45,6 @@ class TrackSimilar(BaseModel):
     track: TrackDTO
     score: float
 
+
 class SimilarTracksResult(BaseModel):
     tracks: List[TrackSimilar]

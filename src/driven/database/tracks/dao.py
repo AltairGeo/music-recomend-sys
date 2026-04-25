@@ -57,7 +57,6 @@ class TracksCrudDao:
             _log.error("TracksCrudDao error in read method: %s", e)
             return None
 
-
     async def search(self, query: str, limit: int = 100) -> Sequence[Track]:
         # В будущем стоит поменят на постгресовский ts_vector
         if not query:
@@ -79,25 +78,21 @@ class TracksCrudDao:
 
                 res = await session.execute(stmt)
 
-                return [
-                    i.dump_to_domain()
-                    for i in res.scalars().all()
-                ]
+                return [i.dump_to_domain() for i in res.scalars().all()]
         except Exception as e:
             _log.error("TracksCrudDao search error: %s", e)
             return []
 
-
     async def find_by_file_hash(self, file_hash: str) -> int | None:
-            """Возвращает ID трека по хешу файла или None."""
-            try:
-                async with async_session_maker() as session:
-                    stmt = select(TrackModel.id).where(TrackModel.file_hash == file_hash)
-                    result = await session.execute(stmt)
-                    return result.scalar_one_or_none()
-            except Exception as e:
-                _log.error("TracksCrudDao error in find_by_file_hash: %s", e)
-                return None
+        """Возвращает ID трека по хешу файла или None."""
+        try:
+            async with async_session_maker() as session:
+                stmt = select(TrackModel.id).where(TrackModel.file_hash == file_hash)
+                result = await session.execute(stmt)
+                return result.scalar_one_or_none()
+        except Exception as e:
+            _log.error("TracksCrudDao error in find_by_file_hash: %s", e)
+            return None
 
     async def get_hashs(self) -> Sequence[str]:
         try:
@@ -108,7 +103,6 @@ class TracksCrudDao:
         except Exception as e:
             _log.error("TracksCrudDAO error in get_hashs metod: %s", e)
             return []
-
 
     async def get_random(self, n: int = 1) -> Sequence[Track]:
         if n < 1:
