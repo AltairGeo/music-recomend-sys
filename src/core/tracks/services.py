@@ -21,3 +21,9 @@ class TracksCrudService:
             raise ValueError("TracksCrudService: get_random_track. n cant be less than 1")
 
         return await self._tracks.get_random(n=n)
+
+    async def search(self, query: str, limit: int = 100) -> Sequence[Track]:
+        if limit <= 1:
+            raise ValueError("TracksCrudService: search. Limit cant be less than 1")
+
+        return await self._tracks.search(query=query, limit=limit)

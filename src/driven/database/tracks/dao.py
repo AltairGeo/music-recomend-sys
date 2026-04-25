@@ -4,7 +4,7 @@ from src.driven.database.tracks.models import TrackModel, TrackEmbeddingModel
 from src.core.tracks.domains import Track
 from src.driven.database.session import async_session_maker
 from src.utils.conv.from_domain_to_model import trackDomTOtrackMod
-from sqlalchemy import func, select, delete
+from sqlalchemy import func, select, delete, or_
 from src.generics.read_result import ReadDTO
 import logging
 
@@ -63,6 +63,36 @@ class TracksCrudDao:
             res = (await session.execute(stmt)).scalars().all()
 
             return [i.dump_to_domain() for i in res]
+
+    async def search(self, query: str, limit: int = 100) -> Sequence[Track]:
+        # В будущем стоит поменят на постгресовский ts_vector
+        if not query:
+            return []
+        try:
+            async with async_session_maker() as session:
+                stmt = (
+                    select(TrackModel)
+                    .where(
+                        or_(
+                            func.lower(TrackModel.title).ilike(f"%{query}%"),
+                            func.lower(TrackModel.artist).ilike(f"%{query}%"),
+                            func.lower(TrackModel.album).ilike(f"%{query}%"),
+                            func.lower(TrackModel.genre).ilike(f"%{query}%"),
+                        )
+                    )
+                    .limit(limit)
+                )
+
+                res = await session.execute(stmt)
+
+                return [
+                    i.dump_to_domain()
+                    for i in res.scalars().all()
+                ]
+        except Exception as e:
+            _log.error("TracksCrudDao search error: %s", e)
+            return []
+
 
     async def find_by_file_hash(self, file_hash: str) -> int | None:
             """Возвращает ID трека по хешу файла или None."""

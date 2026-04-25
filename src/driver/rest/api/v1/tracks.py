@@ -39,7 +39,7 @@ async def search_tracks(
     q: str,
     service: TracksCrudService = Depends(get_tracks_service),
 ):
-    tracks = await service.find_by_name(q)
+    tracks = await service.search(q)
     tracks = [TrackDTO.from_domain(t) for t in tracks]
 
     return ListTracksResult(tracks=tracks, total=len(tracks))
