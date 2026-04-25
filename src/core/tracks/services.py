@@ -15,3 +15,9 @@ class TracksCrudService:
 
     async def find_by_name(self, name: str) -> Sequence[Track]:
         return await self._tracks.find_by_name(name)
+
+    async def get_random_track(self, n: int = 1) -> Sequence[Track]:
+        if n < 1:
+            raise ValueError("TracksCrudService: get_random_track. n cant be less than 1")
+
+        return await self._tracks.get_random(n=n)
