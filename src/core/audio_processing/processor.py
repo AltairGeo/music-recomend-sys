@@ -1,6 +1,8 @@
+from io import BufferedIOBase
+from typing import Any, BinaryIO, Literal, TypedDict
+
 import librosa
 import numpy as np
-from typing import BinaryIO, Literal, TypedDict
 
 
 class AudioFeatures(TypedDict):
@@ -8,156 +10,206 @@ class AudioFeatures(TypedDict):
     spectral_centroid: np.ndarray
     spectral_bandwidth: np.ndarray
     spectral_contrast: np.ndarray
+    spectral_rolloff: np.ndarray
+    spectral_flatness: np.ndarray
     chroma_stft: np.ndarray
     chroma_cqt: np.ndarray
-    rmse: np.ndarray
-    # tempo: float
+    rms: np.ndarray
     zero_crossing_rate: np.ndarray
     tonnetz: np.ndarray
 
 
 class AudioProcessor:
-    def __init__(self, sample_rate: int = 22050, n_mfcc: int = 13) -> None:
+    def __init__(
+        self,
+        sample_rate: int = 22050,
+        n_mfcc: int = 20,
+        n_fft: int = 2048,
+        hop_length: int = 512,
+    ) -> None:
         self.sample_rate = sample_rate
         self.n_mfcc = n_mfcc
+        self.n_fft = n_fft
+        self.hop_length = hop_length
 
     def load_audio(self, file: BinaryIO) -> np.ndarray:
-        """Загрузка аудио с помощью librosa + рессэмплинг"""
-        y, _ = librosa.load(file, sr=self.sample_rate, mono=True)
+        """
+        Загружает аудио, приводит к mono и ресэмплит к нужной частоте.
+        Если это file-like объект, пытается перемотать в начало.
+        """
+        if hasattr(file, "seek"):
+            try:
+                file.seek(0)
+            except Exception:
+                pass
+
+        y, _ = librosa.load(
+            file,
+            sr=self.sample_rate,
+            mono=True,
+        )
+
+        if y.size == 0:
+            raise ValueError("Пустой аудиофайл или не удалось прочитать аудио.")
+
+        # Нормализация амплитуды
+        y = librosa.util.normalize(y)
+
+        # Убираем тишину по краям
+        y, _ = librosa.effects.trim(y, top_db=30)
+
+        if y.size == 0:
+            raise ValueError("После удаления тишины аудио стало пустым.")
+
         return y
 
     def extract_features(self, audio: np.ndarray) -> AudioFeatures:
-        features: AudioFeatures = dict()  # type: ignore
+        features: AudioFeatures = {} # type: ignore
 
-        # MFCC
         features["mfcc"] = librosa.feature.mfcc(
-            y=audio, sr=self.sample_rate, n_mfcc=self.n_mfcc
+            y=audio,
+            sr=self.sample_rate,
+            n_mfcc=self.n_mfcc,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
         )
 
-        # Спектральные
         features["spectral_centroid"] = librosa.feature.spectral_centroid(
-            y=audio, sr=self.sample_rate
+            y=audio,
+            sr=self.sample_rate,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
         )
+
         features["spectral_bandwidth"] = librosa.feature.spectral_bandwidth(
-            y=audio, sr=self.sample_rate
+            y=audio,
+            sr=self.sample_rate,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
         )
+
         features["spectral_contrast"] = librosa.feature.spectral_contrast(
-            y=audio, sr=self.sample_rate
+            y=audio,
+            sr=self.sample_rate,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
         )
 
-        # Chroma
+        features["spectral_rolloff"] = librosa.feature.spectral_rolloff(
+            y=audio,
+            sr=self.sample_rate,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+        )
+
+        features["spectral_flatness"] = librosa.feature.spectral_flatness(
+            y=audio,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+        )
+
         features["chroma_stft"] = librosa.feature.chroma_stft(
-            y=audio, sr=self.sample_rate
+            y=audio,
+            sr=self.sample_rate,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
         )
-        features["chroma_cqt"] = librosa.feature.chroma_cqt(y=audio, sr=self.sample_rate)
 
-        # Energy features
-        features["rmse"] = librosa.feature.rms(y=audio)
-        features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
+        # chroma_cqt иногда может падать на проблемных фрагментах
+        try:
+            features["chroma_cqt"] = librosa.feature.chroma_cqt(
+                y=audio,
+                sr=self.sample_rate,
+                hop_length=self.hop_length,
+            )
+        except Exception:
+            # Если CQT не удалось посчитать
+            features["chroma_cqt"] = np.zeros((12, max(1, len(audio) // self.hop_length + 1)))
 
-        # !!! UNSTABLE PARAMETR!!!
-        # features["tempo"], *_ = librosa.beat.beat_track(y=audio, sr=self.sample_rate) # type: ignore
+        features["rms"] = librosa.feature.rms(
+            y=audio,
+            frame_length=self.n_fft,
+            hop_length=self.hop_length,
+        )
 
-        features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(y=audio)
+        features["zero_crossing_rate"] = librosa.feature.zero_crossing_rate(
+            y=audio,
+            frame_length=self.n_fft,
+            hop_length=self.hop_length,
+        )
 
+        try:
+            features["tonnetz"] = librosa.feature.tonnetz(
+                y=audio,
+                sr=self.sample_rate,
+                hop_length=self.hop_length,
+            )
+        except Exception:
+            features["tonnetz"] = np.zeros((6, max(1, len(audio) // self.hop_length + 1)))
 
-        # tonal
-
-        tonnetz = librosa.feature.tonnetz(y=audio, sr=self.sample_rate)
-        features["tonnetz"] = tonnetz
 
         return features
 
-    def aggregate_features(self, features: AudioFeatures):
-        vector_parts = []
+    @staticmethod
+    def _safe_stats_2d(x: np.ndarray) -> list[np.ndarray]:
+        """
+        Для матрицы (n_features, frames) возвращает:
+        mean по времени, std по времени, delta_mean по времени.
+        """
+        if x.ndim != 2:
+            x = np.atleast_2d(x)
 
-        # MFCC
-        mfcc = features["mfcc"]
+        mean = np.mean(x, axis=1)
+        std = np.std(x, axis=1)
 
-        mfcc_mean = np.mean(mfcc, axis=1)
-        mfcc_std = np.std(mfcc, axis=1)
-        mfcc_delta = np.mean(librosa.feature.delta(mfcc), axis=1)
+        try:
+            delta = librosa.feature.delta(x)
+            delta_mean = np.mean(delta, axis=1)
+        except Exception:
+            delta_mean = np.zeros_like(mean)
 
-        vector_parts.extend([mfcc_mean, mfcc_std, mfcc_delta])
+        return [mean, std, delta_mean]
 
-        # Спектральные
-        for key in ("spectral_centroid", "spectral_bandwidth", "spectral_contrast"):
-            if key in features:
-                spec_feat = features[key]
-                if spec_feat.ndim == 2:
-                    time_mean = np.mean(spec_feat, axis=1)
-                    band_mean = np.mean(time_mean)
-                    vector_parts.append(np.array([band_mean]))
-                else:
-                    vector_parts.append(np.array([np.mean(spec_feat)]))
-
-        # Chroma
-        chroma = features["chroma_stft"]
-        chroma_mean = np.mean(chroma, axis=1)
-        vector_parts.append(chroma_mean)
-
-        chroma_cqt = np.mean(features["chroma_cqt"], axis=1)
-        vector_parts.append(chroma_cqt)
-
-        # Тональные
-        if "tonal" in features:
-            tonal = features["tonal"]
-            tonal_mean = np.mean(tonal, axis=1)
-            vector_parts.append(tonal_mean)
-
-        energy_keys = ["rmse", "zero_crossing_rate"]
-        for key in energy_keys:
-            if key in features:
-                energy = features[key]
-                energy_mean = np.mean(energy)
-                vector_parts.append(np.array([energy_mean]))
-
-        if "tempo" in features:
-            tempo = features["tempo"]
-            vector_parts.append(np.array([tempo]))
-
-        # Tonnetz
-        tonnetz_mean = np.mean(features["tonnetz"], axis=1)
-        tonnetz_std = np.std(features["tonnetz"], axis=1)
-        vector_parts.extend([tonnetz_mean, tonnetz_std])
-
-        final_vector = np.concatenate([part.flatten() for part in vector_parts])
-
-        return final_vector
-
-    def normalize_vector(
-        self, vector: np.ndarray, method: Literal["minmax", "zscore"] = "minmax"
-    ) -> np.ndarray:
-        if method == "minmax":
-            # Min-max нормализация [0, 1]
-            v_min = np.min(vector)
-            v_max = np.max(vector)
-            if v_max - v_min > 1e-8:
-                return (vector - v_min) / (v_max - v_min)
-            else:
-                return np.zeros_like(vector)
-        elif method == "zscore":
-            # Z-score нормализация
-            mean = np.mean(vector)
-            std = np.std(vector)
-            if std > 1e-8:
-                return (vector - mean) / std
-            else:
-                return np.zeros_like(vector)
+    @staticmethod
+    def _safe_stats_1d(x: float | np.ndarray) -> np.ndarray:
+        if isinstance(x, np.ndarray):
+            value = float(np.mean(x))
         else:
-            return vector
+            value = float(x)
+        return np.array([value], dtype=np.float32)
+
+    def aggregate_features(self, features: AudioFeatures) -> np.ndarray:
+        parts: list[np.ndarray] = []
+
+        # Основной спектрально-тембральный блок
+        parts.extend(self._safe_stats_2d(features["mfcc"]))
+        parts.extend(self._safe_stats_2d(features["spectral_centroid"]))
+        parts.extend(self._safe_stats_2d(features["spectral_bandwidth"]))
+        parts.extend(self._safe_stats_2d(features["spectral_contrast"]))
+        parts.extend(self._safe_stats_2d(features["spectral_rolloff"]))
+        parts.extend(self._safe_stats_2d(features["spectral_flatness"]))
+
+        # Гармония
+        parts.extend(self._safe_stats_2d(features["chroma_stft"]))
+        parts.extend(self._safe_stats_2d(features["chroma_cqt"]))
+        parts.extend(self._safe_stats_2d(features["tonnetz"]))
+
+        # Энергия и ритм
+        parts.extend(self._safe_stats_2d(features["rms"]))
+        parts.extend(self._safe_stats_2d(features["zero_crossing_rate"]))
+
+        vector = np.concatenate([p.astype(np.float32).ravel() for p in parts])
+
+        # Финальная нормализация вектора для cosine/L2 search.
+        norm = np.linalg.norm(vector)
+        if norm > 1e-12:
+            vector = vector / norm
+        else:
+            vector = np.zeros_like(vector)
+
+        return vector.astype(np.float32)
 
     def create_embedding(self, file: BinaryIO) -> np.ndarray:
-        # Загрузка аудио
         audio = self.load_audio(file)
-
-        # Извлечение признаков
         features = self.extract_features(audio)
-
-        # Агрегация в вектор
-        raw_vector = self.aggregate_features(features)
-
-        # Нормализация
-        normalized_vector = self.normalize_vector(raw_vector, method="minmax")
-
-        return normalized_vector
+        return self.aggregate_features(features)
