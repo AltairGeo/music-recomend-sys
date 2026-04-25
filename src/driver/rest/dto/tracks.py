@@ -29,9 +29,21 @@ class TrackDTO(BaseModel):
         )
 
 
-class UploadTrackResult(BaseModel):
-    result: List[tuple[TrackDTO, float]]
-
 class GetRandomTrackResult(BaseModel):
     tracks: List[TrackDTO]
     total: Annotated[int, Field(gt=0, lt=20)]
+
+
+class TrackListResult(BaseModel):
+    items: List[TrackDTO]
+    count: Annotated[int, Field(ge=0)]
+    skip: Annotated[int, Field(ge=0)]
+    limit: Annotated[int, Field(ge=1, le=100)]
+
+
+class TrackSimilar(BaseModel):
+    track: TrackDTO
+    score: float
+
+class SimilarTracksResult(BaseModel):
+    tracks: List[TrackSimilar]
