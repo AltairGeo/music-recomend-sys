@@ -18,7 +18,7 @@ def main():
 
         print("✅ Эмбеддинг успешно создан!")
         print(f"📐 Размерность вектора: {len(embedding)}")
-        print(f"📈 Статистика вектора:")
+        print("📈 Статистика вектора:")
         print(f"   - Min: {np.min(embedding):.6f}")
         print(f"   - Max: {np.max(embedding):.6f}")
         print(f"   - Mean: {np.mean(embedding):.6f}")

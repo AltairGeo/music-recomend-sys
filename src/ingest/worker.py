@@ -2,7 +2,6 @@ import logging
 from src.core.audio_processing.processor import AudioProcessor
 from multiprocessing import Queue
 from .dto import TrackProcessed, TrackQueueIn
-from pathlib import Path
 from .metadata import extract_metadata
 import io
 

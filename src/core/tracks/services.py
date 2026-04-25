@@ -13,8 +13,6 @@ class TracksCrudService:
     async def list_tracks(self, skip: int = 0, limit: int = 25):
         return await self._tracks.read(skip=skip, limit=limit)
 
-    async def find_by_name(self, name: str) -> Sequence[Track]:
-        return await self._tracks.find_by_name(name)
 
     async def get_random_track(self, n: int = 1) -> Sequence[Track]:
         if n < 1:

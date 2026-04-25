@@ -1,7 +1,5 @@
-import asyncio
 import logging
 from multiprocessing import Queue, Process
-from src.core.tracks.domains import Track
 from src.settings import app_config
 from src.driven.database.tracks.dao import EmbeddingsCrudDAO, TracksCrudDao
 from src.driven.filesystem.tracks_storage import LocalTracksStorage
@@ -80,8 +78,6 @@ class IngestPipeline:
         return paths_to_hash
 
     async def run(self, root_dir: Path, limit: int|None = None):
-        loop = asyncio.get_event_loop()
-
 
         await create_db_and_tables()
 

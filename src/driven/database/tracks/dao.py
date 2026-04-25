@@ -18,8 +18,8 @@ class TracksCrudDao:
                 db_track = trackDomTOtrackMod(model, model.embedding.id)
 
                 session.add(db_track)
-                await session.commit()
                 await session.flush()
+                await session.commit()
                 return db_track.id
         except Exception as e:
             _log.error("TracksCrudDao error in create method: %s", e)
@@ -57,12 +57,6 @@ class TracksCrudDao:
             _log.error("TracksCrudDao error in read method: %s", e)
             return None
 
-    async def find_by_name(self, name: str) -> Sequence[Track]:
-        async with async_session_maker() as session:
-            stmt = select(TrackModel).filter(TrackModel.title.match(name))
-            res = (await session.execute(stmt)).scalars().all()
-
-            return [i.dump_to_domain() for i in res]
 
     async def search(self, query: str, limit: int = 100) -> Sequence[Track]:
         # В будущем стоит поменят на постгресовский ts_vector
