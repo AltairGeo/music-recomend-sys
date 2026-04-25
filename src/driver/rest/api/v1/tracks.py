@@ -1,5 +1,6 @@
 import io
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile, File
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile, File, status
 from src.core.tracks.services import TracksCrudService
 from src.driver.rest.depends.tracks import get_tracks_service, get_tracks_storage
 from src.driver.rest.dto.tracks import TrackDTO
@@ -8,9 +9,29 @@ from src.driver.rest.depends.recommendation import get_recommendation_service
 from src.core.recommendation.services import RecommendationService
 from src.core.audio_processing.services import AudioEmbeddingService
 from src.driver.rest.depends.audio_processing import get_embedding_service
-from src.driver.rest.dto.tracks import UploadTrackResult
+from src.driver.rest.dto.tracks import UploadTrackResult, GetRandomTrackResult
 
 router = APIRouter(prefix="/tracks")
+
+
+@router.get(
+    "/random",
+    summary="Get random track",
+    status_code=status.HTTP_200_OK,
+    response_model=GetRandomTrackResult
+)
+async def get_random_track(
+    n: int = Query(1, gt=0, lt=20),
+    tracks_service: TracksCrudService = Depends(get_tracks_service)
+):
+    tracks = await tracks_service.get_random_track(n)
+
+    tracks = [TrackDTO.from_domain(i) for i in tracks]
+
+    return GetRandomTrackResult(
+        total=len(tracks),
+        tracks=tracks
+    )
 
 
 
@@ -101,6 +122,7 @@ async def similar_tracks(
         }
         for track, score in results
     ]
+
 
 
 @router.post("/")

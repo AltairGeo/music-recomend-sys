@@ -1,5 +1,5 @@
-from typing import List
-from pydantic import BaseModel
+from typing import Annotated, List
+from pydantic import BaseModel, Field
 from src.core.tracks.domains import Track
 
 
@@ -31,3 +31,7 @@ class TrackDTO(BaseModel):
 
 class UploadTrackResult(BaseModel):
     result: List[tuple[TrackDTO, float]]
+
+class GetRandomTrackResult(BaseModel):
+    tracks: List[TrackDTO]
+    total: Annotated[int, Field(gt=0, lt=20)]
