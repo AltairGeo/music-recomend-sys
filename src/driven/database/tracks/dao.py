@@ -58,27 +58,32 @@ class TracksCrudDao:
             return None
 
     async def search(self, query: str, limit: int = 100) -> Sequence[Track]:
-        # В будущем стоит поменят на постгресовский ts_vector
+        print(query)
         if not query:
             return []
+
         try:
             async with async_session_maker() as session:
+                search = (
+                    TrackModel.title
+                    + " "
+                    + TrackModel.artist
+                    + " "
+                    + TrackModel.album
+                    + " "
+                    + TrackModel.genre
+                )
+
                 stmt = (
                     select(TrackModel)
-                    .where(
-                        or_(
-                            func.lower(TrackModel.title).ilike(f"%{query}%"),
-                            func.lower(TrackModel.artist).ilike(f"%{query}%"),
-                            func.lower(TrackModel.album).ilike(f"%{query}%"),
-                            func.lower(TrackModel.genre).ilike(f"%{query}%"),
-                        )
-                    )
+                    .where(func.similarity(search, query) > 0.07)
+                    .order_by(func.similarity(search, query).desc())
                     .limit(limit)
                 )
 
                 res = await session.execute(stmt)
-
                 return [i.dump_to_domain() for i in res.scalars().all()]
+
         except Exception as e:
             _log.error("TracksCrudDao search error: %s", e)
             return []
@@ -123,8 +128,8 @@ class EmbeddingsCrudDAO:
             async with async_session_maker() as session:
                 obj = TrackEmbeddingModel(vector=vector)
                 session.add(obj)
-                await session.commit()
                 await session.flush()
+                await session.commit()
                 return obj.id
         except Exception as e:
             _log.error("EmbeddingCrudDAO error in create method: %s", e)

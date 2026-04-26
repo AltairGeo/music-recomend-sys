@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ARRAY, FLOAT, ForeignKey, String
 from src.core.tracks.domains import Track
 from src.core.audio_processing.domains import TrackEmbedding
+from sqlalchemy import Index, text
 
 
 class TrackModel(BaseModel):
@@ -19,9 +20,17 @@ class TrackModel(BaseModel):
     embedding_id: Mapped[int] = mapped_column(
         ForeignKey("tracks_embeddings.id"), nullable=False
     )
-    embedding: Mapped["TrackEmbeddingModel"] = relationship(lazy="joined")
-    file_id: Mapped[str] = mapped_column(String(256), nullable=False)
-    file_hash: Mapped[str] = mapped_column(String(64), nullable=True, index=True)
+    embedding: Mapped["TrackEmbeddingModel"] = relationship(lazy="selectin")
+    file_id: Mapped[str] = mapped_column(String(256), nullable=False, index=True)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=True, index=True, unique=True)
+
+    __table_args__ = (
+        Index(
+            "tracks_search_trgm_idx",
+            text("(title || ' ' || artist || ' ' || album || ' ' || genre) gin_trgm_ops"),
+            postgresql_using="gin",
+        ),
+    )
 
     @property
     def audio_url(self) -> str:

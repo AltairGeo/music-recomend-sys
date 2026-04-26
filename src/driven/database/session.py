@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from src.settings import app_config
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import event, DDL
 
 
 class BaseModel(AsyncAttrs, DeclarativeBase):
@@ -15,6 +16,11 @@ class BaseModel(AsyncAttrs, DeclarativeBase):
 options = {"echo": False}
 
 engine = create_async_engine(app_config.db.dsn_url, pool_pre_ping=True, **options)
+
+event.listen(
+    BaseModel.metadata, "before_create", DDL("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+)
+
 async_session_maker = async_sessionmaker(
     engine,
     expire_on_commit=False,
