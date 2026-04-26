@@ -19,7 +19,7 @@ class MainConfig:
         self.per_page: int = 25
         self.n_mfcc: int = 13
         self.music_data_folder: Path = Path(
-            os.getenv("APP_LOCAL_STORAGE", "mus_storag")
+            os.getenv("APP_LOCAL_STORAGE", "mus_storage")
         )
 
 
