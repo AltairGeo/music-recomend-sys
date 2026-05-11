@@ -1,14 +1,16 @@
 import io
+import re
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
     Query,
-    Response,
+    Request,
     UploadFile,
     File,
     status,
 )
+from fastapi.responses import StreamingResponse
 from src.core.tracks.services import TracksCrudService
 from src.driver.rest.depends.tracks import get_tracks_service, get_tracks_storage
 from src.driver.rest.dto.tracks import (
@@ -95,23 +97,52 @@ async def list_tracks(
 @router.get("/{track_id}/audio")
 async def get_track_audio(
     track_id: int,
+    request: Request,
     service: TracksCrudService = Depends(get_tracks_service),
     storage: TracksStoragePort = Depends(get_tracks_storage),
 ):
     track = await service.get_track(track_id)
 
     if not track:
-        raise HTTPException(status_code=404, detail="Track not found")
+        raise HTTPException(404)
 
-    try:
-        audio_bytes = await storage.read(track.file_id)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Audio file not found")
+    audio_bytes = await storage.read(track.file_id)
+    file_size = len(audio_bytes)
 
-    return Response(
-        content=audio_bytes,
+    range_header = request.headers.get("range")
+
+    if range_header:
+        match = re.search(r"bytes=(\d+)-(\d*)", range_header)
+
+        if match:
+            start = int(match.group(1))
+            end = int(match.group(2)) if match.group(2) else file_size - 1
+
+            end = min(end, file_size - 1)
+
+            chunk = audio_bytes[start:end + 1]
+
+            headers = {
+                "Content-Range": f"bytes {start}-{end}/{file_size}",
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(len(chunk)),
+            }
+
+            return StreamingResponse(
+                iter([chunk]),
+                status_code=206,
+                media_type="audio/mpeg",
+                headers=headers,
+            )
+
+    # full file fallback
+    return StreamingResponse(
+        iter([audio_bytes]),
         media_type="audio/mpeg",
-        headers={"Content-Disposition": f'inline; filename="{track.title}.mp3"'},
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(file_size),
+        },
     )
 
 
