@@ -57,27 +57,24 @@ class TracksCrudDao:
             _log.error("TracksCrudDao error in read method: %s", e)
             return None
 
-    async def search(self, query: str, limit: int = 100) -> Sequence[Track]:
-        print(query)
+    async def search(self, query: str, limit: int = 50) -> Sequence[Track]:
         if not query:
             return []
 
         try:
             async with async_session_maker() as session:
-                search = (
-                    TrackModel.title
-                    + " "
-                    + TrackModel.artist
-                    + " "
-                    + TrackModel.album
-                    + " "
-                    + TrackModel.genre
-                )
+                pattern = f"%{query}%"
 
                 stmt = (
                     select(TrackModel)
-                    .where(func.similarity(search, query) > 0.07)
-                    .order_by(func.similarity(search, query).desc())
+                    .where(
+                        or_(
+                            TrackModel.title.ilike(pattern),
+                            TrackModel.artist.ilike(pattern),
+                            TrackModel.album.ilike(pattern),
+                            TrackModel.genre.ilike(pattern),
+                        )
+                    )
                     .limit(limit)
                 )
 
@@ -85,7 +82,7 @@ class TracksCrudDao:
                 return [i.dump_to_domain() for i in res.scalars().all()]
 
         except Exception as e:
-            _log.error("TracksCrudDao search error: %s", e)
+            print(e)
             return []
 
     async def find_by_file_hash(self, file_hash: str) -> int | None:
